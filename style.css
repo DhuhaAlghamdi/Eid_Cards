@@ -51,8 +51,7 @@ body::before {
 
 /* ── Header ── */
 .site-header {
-  
-  width: 300%;
+  width: 100%;
   display: flex; align-items: center; justify-content: center; gap: 18px;
   background: rgba(0, 10, 40, 0.55);
   border-bottom: 1px solid rgba(80,230,255,.18);
@@ -115,16 +114,16 @@ body::before {
 }
 /* ──────────────────── قيد التعديل ──────────────────── */
 .hero-balloons{
-  left: -180px;
+  left: -10%;
   top: -5px;
-  width: 550px;
+  width: clamp(200px, 70vw, 550px);
 }
 
 /* ──────────────────── قيد التعديل ──────────────────── */
 .hero-fireworks{
-  right: -25px;
+  right: 0px;
   top: 0px;
-  width: 200px;
+  width: clamp(80px, 25vw, 200px);
   opacity: .95;
 }
 
