@@ -125,13 +125,16 @@ body::before {
   height: auto;
 }
 /* ──────────────────── قيد التعديل ──────────────────── */
-
+.hero{
+    position: relative;
+    overflow: hidden;
+}
 /* ============= ballons ================ */
 .hero-balloons{
     position: absolute;
     left: 2%;
     top: 18%;
-    width: clamp(250px, 30vw, 400px);
+    width: 70%;
     z-index: 1;
     animation: float 5s ease-in-out infinite;
 }
@@ -637,6 +640,7 @@ body::before {
   .main-template-grid,
   .sub-grid { grid-template-columns: 1fr; }
 }
+
 
 
 
