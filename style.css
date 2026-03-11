@@ -252,13 +252,23 @@ body::after {
   z-index: 3;
   height: auto;
 }
-
-.hero-balloons {
-  left: 2%;
-  top: -4%;
-  width: 150px;
-  animation: floatBalloon 6s ease-in-out infinite;
+.hero-fireworks-right {
+  right: 4%;
+  top: 4%;
+  width: 100px;
+  opacity: 0.9;
+  animation: sparkle 3s ease-in-out infinite;
 }
+
+.hero-fireworks-left {
+  left: 4%;
+  top: 4%;
+  width: 100px;
+  opacity: 0.9;
+  animation: sparkle 3s ease-in-out infinite;
+  transform: scaleX(-1);
+}
+
 
 .hero-fireworks {
   right: 4%;
@@ -278,20 +288,6 @@ body::after {
   50%  { transform: scale(1.12); opacity: 1; }
 }
 
-/* Moon icon */
-.hero-moon-icon {
-  font-size: 38px;
-  position: relative;
-  z-index: 5;
-  margin-bottom: 6px;
-  filter: drop-shadow(0 0 16px rgba(255,185,0,.6));
-  animation: moonGlow 4s ease-in-out infinite;
-}
-
-@keyframes moonGlow {
-  0%, 100% { filter: drop-shadow(0 0 12px rgba(255,185,0,.5)); }
-  50% { filter: drop-shadow(0 0 28px rgba(255,185,0,.9)); }
-}
 
 /* Hero title */
 .hero-eid {
@@ -306,7 +302,7 @@ body::after {
 }
 
 .eid-line-1 {
-  font-size: clamp(42px, 12vw, 70px);
+  font-size: clamp(52px, 15vw, 90px);
   font-weight: 700;
   color: var(--white);
   text-shadow:
