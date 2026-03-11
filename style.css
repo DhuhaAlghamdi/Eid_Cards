@@ -130,8 +130,8 @@ body::before {
 .hero-balloons{
     position: absolute;
     left: -2.5%;
-    top: 12.5%;
-    width: clamp(18%, 30vw, 42%);
+    top: 13%;
+    width: clamp(60%, 30vw, 42%);
     z-index: 1;
     animation: float 5s ease-in-out infinite;
 }
@@ -155,8 +155,8 @@ body::before {
 .hero-fireworks{
     position: absolute;
     right: -3.3%;
-    top: 6%;
-    width: clamp(12.5%, 22vw, 13.3%);
+    top: 2%;
+    width: clamp(40%, 22vw, 13.3%);
     opacity: 0.9;
     z-index: 1;
     animation: sparkle 3s ease-in-out infinite;
@@ -639,5 +639,6 @@ body::before {
   .main-template-grid,
   .sub-grid { grid-template-columns: 1fr; }
 }
+
 
 
