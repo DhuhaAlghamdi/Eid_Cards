@@ -4,112 +4,190 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>معايدة Microsoft LSAC Club </title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Lateef&family=Aref+Ruqaa:wght@400;700&display=swap"
-    rel="stylesheet">
+  <title>معايدة Microsoft LSAC Club</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+  <!-- Particle canvas -->
+  <canvas id="particleCanvas"></canvas>
   <div id="floatingShapes"></div>
 
   <div class="page-wrapper">
 
     <!-- ══ HEADER ══ -->
-    <div class="site-header">
+    <header class="site-header">
       <div class="header-logo-wrap">
         <img src="image/logo.png" alt="MLSA" class="site-logo">
+        <div class="logo-glow-ring"></div>
       </div>
       <div class="header-text">
         <div class="site-title">نادي مايكروسوفت</div>
         <div class="site-subtitle">Microsoft LSAC</div>
       </div>
-    </div>
+    </header>
 
     <!-- ══ HERO ══ -->
-    <div class="hero-section">
+    <section class="hero-section">
+      <div class="hero-bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+      </div>
+
       <img src="image/ballons.gif" alt="" class="hero-decor hero-balloons">
       <img src="image/fireworks.gif" alt="" class="hero-decor hero-fireworks">
 
+      <div class="hero-moon-icon">🌙</div>
       <h1 class="hero-eid">
-        <span class="eid-word">تهنئة عيد الفطر المبارك</span>
+        <span class="eid-line-1">عيد الفطر</span>
+        <span class="eid-line-2">المبارك</span>
       </h1>
-      <div class="hero-sub">أنشئ معايدتك وشاركها مع أحبابك</div>
-    </div>
+      <div class="hero-divider-line">
+        <span class="divider-star">✦</span>
+        <span class="divider-line"></span>
+        <span class="divider-star">✦</span>
+      </div>
+      <div class="hero-sub">أنشئ بطاقة معايدتك وشاركها مع أحبابك</div>
+
+      <div class="hero-scroll-hint">
+        <span>↓</span>
+      </div>
+    </section>
 
     <!-- ══ STEP 1 ══ -->
     <div class="step-card" id="step1">
-      <div class="step-label">اختر نوع المعايدة</div>
+      <div class="step-header">
+        <div class="step-label">اختر نوع البطاقة</div>
+      </div>
 
       <div class="main-template-grid">
         <div class="main-opt" id="mainOpt1" onclick="chooseMajor(1)">
           <div class="main-preview blue-prev">
+            <div class="preview-shine"></div>
             <img src="image/logo.png" class="prev-logo" alt="">
+            <div class="prev-badge-text">MLSAC</div>
           </div>
-          <div class="main-opt-label">بطاقة تهنئة مايكروسوفت</div>
+          <div class="main-opt-info">
+            <div class="main-opt-label">بطاقة النادي</div>
+            <div class="main-opt-sub">تهنئة رسمية بهوية المايكروسوفت</div>
+          </div>
+          <div class="main-opt-arrow">←</div>
         </div>
 
         <div class="main-opt" id="mainOpt2" onclick="chooseMajor(2)">
           <div class="main-preview general-prev">
+            <div class="preview-shine"></div>
             <img src="image/gift.gif" alt="" class="main-gift-gif">
+            <div class="prev-badge-text">عام</div>
           </div>
-          <div class="main-opt-label">بطاقة تهنئة عامة</div>
+          <div class="main-opt-info">
+            <div class="main-opt-label">بطاقة عامة</div>
+            <div class="main-opt-sub">تهنئة احتفالية للجميع</div>
+          </div>
+          <div class="main-opt-arrow">←</div>
         </div>
       </div>
     </div>
 
     <!-- ══ STEP 2A — بطاقة النادي ══ -->
     <div class="step-card hidden" id="step2A">
-      <div class="step-label">أدخل بياناتك</div>
+      <div class="step-header">
+        <div class="step-number">٢</div>
+        <div class="step-label">أدخل بياناتك</div>
+      </div>
 
-      <input type="text" class="field-input" id="nameA" placeholder="اكتب اسمك..." maxlength="30" autocomplete="off">
+      <div class="input-group">
+        <label class="input-label">الاسم <span class="required-dot">*</span></label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" class="field-input" id="nameA" placeholder="اكتب اسمك..." maxlength="30" autocomplete="off">
+        </div>
+      </div>
 
-      <input type="text" class="field-input" id="roleA" placeholder="منصبك في النادي (اختياري)..." maxlength="40"
-        autocomplete="off">
+      <div class="input-group">
+        <label class="input-label">المنصب <span class="optional-tag">اختياري</span></label>
+        <div class="input-wrapper">
+          <span class="input-icon">🏅</span>
+          <input type="text" class="field-input" id="roleA" placeholder="منصبك في النادي..." maxlength="40" autocomplete="off">
+        </div>
+      </div>
 
       <div class="btn-row">
-        <button class="back-btn" onclick="goBack()">← رجوع</button>
-        <button class="gen-btn" onclick="generateClub()"> أنشئ البطاقة✨</button>
+        <button class="back-btn" onclick="goBack()">
+          <span class="btn-icon">←</span> رجوع
+        </button>
+        <button class="gen-btn" onclick="generateClub()">
+          <span class="btn-sparkle">✨</span> أنشئ البطاقة
+        </button>
       </div>
     </div>
 
     <!-- ══ STEP 2B — بطاقة عامة ══ -->
     <div class="step-card hidden" id="step2B">
-      <div class="step-label">أدخل اسمك</div>
+      <div class="step-header">
+        <div class="step-number">٢</div>
+        <div class="step-label">أدخل اسمك</div>
+      </div>
 
-      <input type="text" class="field-input" id="nameB" placeholder="اكتب اسمك..." maxlength="30" autocomplete="off">
+      <div class="input-group">
+        <label class="input-label">الاسم <span class="required-dot">*</span></label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" class="field-input" id="nameB" placeholder="اكتب اسمك..." maxlength="30" autocomplete="off">
+        </div>
+      </div>
 
       <div class="btn-row">
-        <button class="back-btn" onclick="goBack()">← رجوع</button>
-        <button class="gen-btn" onclick="generateGeneral()"> أنشئ البطاقة✨</button>
+        <button class="back-btn" onclick="goBack()">
+          <span class="btn-icon">←</span> رجوع
+        </button>
+        <button class="gen-btn" onclick="generateGeneral()">
+          <span class="btn-sparkle">✨</span> أنشئ البطاقة
+        </button>
       </div>
     </div>
 
     <!-- ══ RESULT ══ -->
     <div class="card-wrapper hidden" id="resultSection">
 
-      <!-- MLSAC Card -->
+      <div class="result-header">
+        <div class="result-success-badge">
+          <span>🎉</span> بطاقتك جاهزة!
+        </div>
+      </div>
+
+      <!-- MLSAC Club Card -->
       <div id="clubCard" class="greeting-card hidden">
         <div class="club-texture"></div>
+        <div class="club-shimmer"></div>
 
         <div class="corner-burst burst-left"></div>
         <div class="corner-burst burst-right"></div>
+
+        <div class="club-stars-layer" id="clubStars"></div>
 
         <div class="club-top">
           <img src="image/logo.png" alt="MLSAC" class="club-logo-img">
           <div class="club-top-text">
             <div class="club-en-name">Microsoft LSAC Club</div>
+            <div class="club-ar-name">نادي مايكروسوفت</div>
           </div>
         </div>
 
         <div class="club-center">
-          <img src="image/eid mubarak.png" alt="MLSAC" class="club-eid">
-          <div class="club-kol">كل عام وأنتم بخير</div>
+          <img src="image/eid mubarak.png" alt="عيد مبارك" class="club-eid">
+          <div class="club-kol-row">
+            <span class="kol-star">✦</span>
+            <div class="club-kol">كل عام وأنتم بخير</div>
+            <span class="kol-star">✦</span>
+          </div>
         </div>
 
         <div class="club-badge">
+          <div class="badge-glow-ring"></div>
           <div class="b-info">
             <div class="b-name" id="outName1">الاسم</div>
             <div class="b-role" id="outRole1"></div>
@@ -118,13 +196,15 @@
 
         <div class="club-footer">
           <img src="image/logo.png" alt="" class="footer-logo-img">
-          <span class="footer-txt">MLSA · 2026</span>
+          <span class="footer-divider-dot">·</span>
+          <span class="footer-txt">MLSA 2026</span>
+          <span class="footer-divider-dot">·</span>
+          <span class="footer-txt-ar">عيد مبارك</span>
         </div>
       </div>
 
       <!-- General Card -->
       <div id="genCard1" class="greeting-card card-gen hidden">
-        <!-- إذا كانت الصورة png بدلي jpg إلى png -->
         <div class="gen-bg-img" style="background-image: url('image/eid.png')"></div>
         <div class="gen-overlay-soft"></div>
         <div class="card-festive" id="gen1Decor"></div>
@@ -134,40 +214,36 @@
         </div>
       </div>
 
-      <!-- Buttons -->
+      <!-- Action Buttons -->
       <div class="result-btns">
-        <button class="back-btn wide" onclick="goBackFromResult()">← إنشاء معايدة أخرى</button>
-        <button class="dl-btn" id="dlBtn" onclick="downloadCard()">⬇️ تحميل الصورة</button>
+        <button class="back-btn wide" onclick="goBackFromResult()">
+          ✦ إنشاء معايدة جديدة
+        </button>
+        <button class="dl-btn" id="dlBtn" onclick="downloadCard()">
+          <span class="dl-icon">⬇</span>
+          <span>تحميل البطاقة</span>
+        </button>
       </div>
 
-    </div><!-- /resultSection -->
+      <div class="share-hint">شارك بطاقتك مع أحبابك 💛</div>
+
+    </div>
 
   </div><!-- /page-wrapper -->
 
+  <!-- Social Bar -->
   <div class="social-bar">
-
-    <a href="https://x.com/microsoft_lsac?s=21&t=EAgGsXq8_sWAfRVWY7o1SA" target="_blank" class="social-link"
-      aria-label="X">
+    <div class="social-bar-label">تابعنا</div>
+    <a href="https://x.com/microsoft_lsac?s=21&t=EAgGsXq8_sWAfRVWY7o1SA" target="_blank" class="social-link" aria-label="X">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231
-               -5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25z
-               M17.083 19.77h1.833L7.084 4.126H5.117L17.083 19.77z" />
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zM17.083 19.77h1.833L7.084 4.126H5.117L17.083 19.77z"/>
       </svg>
     </a>
-
-    <a href="https://www.linkedin.com/company/microsoft-lsac/mycompany/?viewAsMember=true" target="_blank"
-      class="social-link" aria-label="LinkedIn">
+    <a href="https://www.linkedin.com/company/microsoft-lsac/mycompany/?viewAsMember=true" target="_blank" class="social-link" aria-label="LinkedIn">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037
-               -1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046
-               c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286z
-               M5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065z
-               m1.782 13.019H3.555V9h3.564v11.452z
-               M22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451
-               C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
       </svg>
     </a>
-
   </div>
 
   <!-- ══ FOOTER ══ -->
@@ -182,12 +258,11 @@
         <img src="image/Bshy.gif" alt="" class="footer-bshy">
       </div>
       <div class="footer-divider"></div>
-      <div class="footer-copy">عيد مبارك وكل عام وأنتم بخير . صُنع بـ ❤️ من مجتمع MLSAC</div>
+      <div class="footer-copy">عيد مبارك وكل عام وأنتم بخير &nbsp;·&nbsp; صُنع بـ ❤️ من مجتمع MLSAC</div>
     </div>
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="script.js"></script>
 </body>
-
 </html>
