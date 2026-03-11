@@ -34,7 +34,7 @@
       <img src="image/fireworks.gif" alt="" class="hero-decor hero-fireworks">
 
       <h1 class="hero-eid">
-       <span class="eid-word">تهنئة عيد الفطر المبارك </span>
+        <span class="eid-word">تهنئة عيد الفطر المبارك</span>
       </h1>
       <div class="hero-sub">أنشئ معايدتك وشاركها مع أحبابك</div>
     </div>
@@ -75,26 +75,9 @@
       </div>
     </div>
 
-    <!-- ══ STEP 2B —  Geeneral card ══ -->
+    <!-- ══ STEP 2B — بطاقة عامة ══ -->
     <div class="step-card hidden" id="step2B">
-      <div class="step-label">اختر القالب وأدخل اسمك</div>
-
-      <div class="sub-grid">
-        <div class="sub-opt active" id="subOpt1" onclick="chooseSub(1)">
-          <div class="sub-prev" style="background-image: url('image/eid1.jpg')">
-            <div class="sub-overlay">
-            </div>
-          </div>
-          <span>قالب الورود </span>
-        </div>
-        <div class="sub-opt" id="subOpt2" onclick="chooseSub(2)">
-          <div class="sub-prev" style="background-image: url('image/eid2.jpg')">
-            <div class="sub-overlay">
-            </div>
-          </div>
-          <span>قالب النخيل </span>
-        </div>
-      </div>
+      <div class="step-label">أدخل اسمك</div>
 
       <input type="text" class="field-input" id="nameB" placeholder="اكتب اسمك..." maxlength="30" autocomplete="off">
 
@@ -110,52 +93,44 @@
       <!-- MLSAC Card -->
       <div id="clubCard" class="greeting-card hidden">
         <div class="club-texture"></div>
-        <div class="club-glow g1"></div>
-        <div class="club-glow g2"></div>
-        <div class="card-sparks" id="clubSparks"></div>
+
+        <div class="corner-burst burst-left"></div>
+        <div class="corner-burst burst-right"></div>
+
         <div class="club-top">
           <img src="image/logo.png" alt="MLSAC" class="club-logo-img">
           <div class="club-top-text">
-            <div class="club-en-name">Microsoft LASC Club</div>
+            <div class="club-en-name">Microsoft LSAC Club</div>
           </div>
         </div>
+
         <div class="club-center">
-          <img src="image/eid mubarak.png" alt="MLSAC" class="club-eid mubarak">
-          <div class="club-row">
-          </div>
+          <img src="image/eid mubarak.png" alt="MLSAC" class="club-eid">
           <div class="club-kol">كل عام وأنتم بخير</div>
         </div>
+
         <div class="club-badge">
-          <span class="b-star">✦</span>
           <div class="b-info">
             <div class="b-name" id="outName1">الاسم</div>
             <div class="b-role" id="outRole1"></div>
           </div>
-          <span class="b-star">✦</span>
         </div>
+
         <div class="club-footer">
           <img src="image/logo.png" alt="" class="footer-logo-img">
           <span class="footer-txt">MLSA · 2026</span>
         </div>
       </div>
 
-      <!-- General Cards -->
-
-      <!-- general card- flowers -->
+      <!-- General Card -->
       <div id="genCard1" class="greeting-card card-gen hidden">
-        <div class="gen-bg-img" style="background-image: url('image/eid1.jpg')"></div>
-        <div class="card-sparks" id="gen1Sparks"></div>
-        <div class="gen1-name-area">
-          <div class="gen1-name" id="outName2">الاسم</div>
-        </div>
-      </div>
+        <!-- إذا كانت الصورة png بدلي jpg إلى png -->
+        <div class="gen-bg-img" style="background-image: url('image/eid.png')"></div>
+        <div class="gen-overlay-soft"></div>
+        <div class="card-festive" id="gen1Decor"></div>
 
-      <!-- general card - trees -->
-      <div id="genCard2" class="greeting-card card-gen hidden">
-        <div class="gen-bg-img" style="background-image: url('image/eid2.jpg')"></div>
-        <div class="card-sparks" id="gen2Sparks"></div>
-        <div class="gen2-name-area">
-          <div class="gen2-name" id="outName3">الاسم</div>
+        <div class="gen1-name-badge">
+          <div class="gen1-name" id="outName2">الاسم</div>
         </div>
       </div>
 
@@ -216,5 +191,3 @@
 </body>
 
 </html>
-
-
