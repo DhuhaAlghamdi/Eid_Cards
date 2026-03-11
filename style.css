@@ -127,14 +127,13 @@ body::before {
 /* ──────────────────── قيد التعديل ──────────────────── */
 
 /* ============= ballons ================ */
-
 .hero-balloons{
-  position: absolute;
-  left: -30px;
-  top: 150px;
-  width: clamp(500px, 30vw, 220px);
-  z-index: 1;
-  animation: float 5s ease-in-out infinite;
+    position: absolute;
+    left: -2.5%;
+    top: 12.5%;
+    width: clamp(18%, 30vw, 42%);
+    z-index: 1;
+    animation: float 5s ease-in-out infinite;
 }
 
 /* ============= ballons motion ================ */
@@ -154,13 +153,13 @@ body::before {
 
 /* ============= fireworks ================ */
 .hero-fireworks{
-  position: absolute;
-  right: -40px;
-  top: 70px;
-  width: clamp(150px, 22vw, 160px);
-  opacity: .9;
-  z-index: 1;
-  animation: sparkle 3s ease-in-out infinite;
+    position: absolute;
+    right: -3.3%;
+    top: 6%;
+    width: clamp(12.5%, 22vw, 13.3%);
+    opacity: 0.9;
+    z-index: 1;
+    animation: sparkle 3s ease-in-out infinite;
 }
 
 /* ============= fireworks motion ================ */
@@ -640,4 +639,5 @@ body::before {
   .main-template-grid,
   .sub-grid { grid-template-columns: 1fr; }
 }
+
 
