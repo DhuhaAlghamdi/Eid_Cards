@@ -169,6 +169,12 @@
         <div class="corner-burst burst-left"></div>
         <div class="corner-burst burst-right"></div>
 
+        <!-- ✅ أشكال طراطيع في الزوايا الأربعة -->
+        <div class="card-corner-shape corner-tl">🌙</div>
+        <div class="card-corner-shape corner-tr">⭐</div>
+        <div class="card-corner-shape corner-bl">✨</div>
+        <div class="card-corner-shape corner-br">🌙</div>
+
         <div class="club-stars-layer" id="clubStars"></div>
 
         <div class="club-top">
@@ -180,7 +186,8 @@
         </div>
 
         <div class="club-center">
-          <img src="image/happyeid.webp" alt="عيد سعيد " class="club-eid">
+          <!-- ✅ صورة happyeid بـ base64 مع invert للون الأبيض — سيتم حقن الـ src بواسطة JS -->
+          <img id="happyEidImg" alt="عيد سعيد" class="club-eid">
           <div class="club-kol-row">
             <span class="kol-star">✦</span>
             <div class="club-kol">كل عام وأنتم بخير</div>
