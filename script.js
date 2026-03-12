@@ -1,5 +1,5 @@
 // =============================================
-//  MLSAC Eid Generator — script.js (v2)
+//  MLSAC Eid Generator — script.js 
 // =============================================
 
 let majorTemplate = 0; // 1=club, 2=general
@@ -9,11 +9,9 @@ let majorTemplate = 0; // 1=club, 2=general
 function chooseMajor(n) {
   majorTemplate = n;
 
-  // Animate the option selection
   document.getElementById('mainOpt1').classList.toggle('active', n === 1);
   document.getElementById('mainOpt2').classList.toggle('active', n === 2);
 
-  // Brief delay for visual feedback then transition
   setTimeout(() => {
     document.getElementById('step1').classList.add('hidden');
 
@@ -44,7 +42,6 @@ function goBackFromResult() {
   document.getElementById('mainOpt1').classList.remove('active');
   document.getElementById('mainOpt2').classList.remove('active');
 
-  // Clear inputs
   ['nameA', 'roleA', 'nameB'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -68,14 +65,11 @@ function requireName(inputId) {
   if (!val) {
     el.focus();
     el.style.borderColor = '#F25022';
-    el.style.boxShadow   = '0 0 0 3px rgba(242,80,34,.2)';
-    el.style.animation   = 'shake .35s ease both';
-
-    // Shake animation via class
+    el.style.boxShadow = '0 0 0 3px rgba(242,80,34,.2)';
     el.classList.add('input-error');
     setTimeout(() => {
       el.style.borderColor = '';
-      el.style.boxShadow   = '';
+      el.style.boxShadow = '';
       el.classList.remove('input-error');
     }, 1400);
     return null;
@@ -83,7 +77,7 @@ function requireName(inputId) {
   return val;
 }
 
-// ── Club stars / confetti ─────────────────────
+// ── Club stars ────────────────────────────────
 
 const STAR_POSITIONS = [
   [8, 12], [15, 55], [88, 10], [82, 60],
@@ -197,32 +191,31 @@ function downloadCard() {
   const card = ids
     .map(id => document.getElementById(id))
     .find(el => !el.classList.contains('hidden'));
-
   if (!card) return;
 
   const btn = document.getElementById('dlBtn');
   btn.innerHTML = '<span class="dl-icon">⏳</span> <span>جاري الإعداد...</span>';
   btn.disabled = true;
 
-  html2canvas(card, {
-    scale: 3,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: null,
-    logging: false,
-    imageTimeout: 12000,
-onclone: (doc, element) => {
-  element.querySelectorAll('*').forEach(el => {
-    const style = window.getComputedStyle(el);
-    if (style.direction === 'rtl' || el.textContent.trim()) {
-      el.style.direction = 'rtl';
-      el.style.unicodeBidi = 'bidi-override';
+  const scale = 3;
+  const width = card.offsetWidth * scale;
+  const height = card.offsetHeight * scale;
+
+  domtoimage.toPng(card, {
+    quality: 1,
+    width: width,
+    height: height,
+    style: {
+      transform: `scale(${scale})`,
+      transformOrigin: 'top left',
+      width: card.offsetWidth + 'px',
+      height: card.offsetHeight + 'px',
     }
-  });
-}).then(canvas => {
+  })
+  .then(dataUrl => {
     const link = document.createElement('a');
     link.download = 'mlsac-eid-1447.png';
-    link.href = canvas.toDataURL('image/png');
+    link.href = dataUrl;
     link.click();
 
     btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
@@ -230,10 +223,10 @@ onclone: (doc, element) => {
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
       btn.disabled = false;
     }, 2200);
-
-  }).catch(err => {
+  })
+  .catch(err => {
     console.error(err);
-    alert('حدث خطأ أثناء التحميل، حاولي مجدداً');
+    alert('حدث خطأ، حاولي مجدداً');
     btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
     btn.disabled = false;
   });
@@ -270,7 +263,7 @@ function createFloatingShapes() {
   }
 }
 
-// ── Particle canvas (subtle) ──────────────────
+// ── Particle canvas ───────────────────────────
 
 function initParticleCanvas() {
   const canvas = document.getElementById('particleCanvas');
@@ -339,7 +332,7 @@ document.addEventListener('keypress', (e) => {
   }
 });
 
-// ── Input shake animation (CSS) ───────────────
+// ── Input shake animation ─────────────────────
 
 const shakeStyle = document.createElement('style');
 shakeStyle.textContent = `
@@ -352,7 +345,6 @@ shakeStyle.textContent = `
     75% { transform: translateX(-3px); }
     90% { transform: translateX(3px); }
   }
-
   .input-error {
     animation: shake .35s ease both !important;
   }
@@ -363,4 +355,3 @@ document.head.appendChild(shakeStyle);
 
 createFloatingShapes();
 initParticleCanvas();
-
