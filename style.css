@@ -956,7 +956,7 @@ body::after {
   width: 100%;
   left: 0;
   z-index: 3;
-
+}
 
 .club-badge {
   position: relative;
@@ -1344,3 +1344,4 @@ body::after {
   .eid-line-1 { font-size: 30px; }
   .eid-line-2 { font-size: 26px; }
 }
+
