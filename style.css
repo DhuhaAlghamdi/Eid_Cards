@@ -965,11 +965,11 @@ body::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.22);
+  backdrop-filter: none;
   border: 1.5px solid rgba(255,255,255,.25);
   border-radius: 16px;
   padding: 8px 20px;
-  backdrop-filter: blur(16px);
   box-shadow: 0 10px 30px rgba(0,0,0,.2);
   white-space: nowrap;
   max-width: 80%;
@@ -1112,11 +1112,11 @@ body::after {
   transform: translateX(-50%);
   width: auto;
   max-width: 85%;
-  background: rgba(0,0,0,.35);
+  background: rgba(0,0,0,.45);
+  backdrop-filter: none;
   border: 1.5px solid rgba(255,255,255,.28);
   border-radius: 22px;
   padding: 14px 28px;
-  backdrop-filter: blur(14px);
   box-shadow: 0 12px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.12);
   text-align: center;
   z-index: 3;
