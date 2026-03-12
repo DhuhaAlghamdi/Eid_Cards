@@ -213,9 +213,11 @@ function downloadCard() {
     imageTimeout: 12000,
     onclone: (doc) => {
       // Ensure Arabic text renders correctly
-      doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol').forEach(el => {
-        el.style.direction   = 'rtl';
-        el.style.unicodeBidi = 'embed';
+
+  doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar').forEach(el => {
+    el.style.direction = 'rtl';
+    el.style.unicodeBidi = 'embed';
+    el.style.fontFamily = 'Tajawal, Cairo, sans-serif';
       });
     }
   }).then(canvas => {
