@@ -943,22 +943,41 @@ body::after {
   z-index: 1;
 }
 
-/* Club center */
 .club-center {
-  position: absolute;
+  position: center;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px 20px;
+  gap: 4px;
+  padding: 65px 20px 35px;
   text-align: center;
-  gap: 16px;
   z-index: 3;
 }
 
+.club-badge {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  top: auto;
+  transform: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.12);
+  border: 1.5px solid rgba(255,255,255,.25);
+  border-radius: 16px;
+  padding: 8px 20px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  white-space: nowrap;
+  max-width: 80%;
+  z-index: 4;
+}
+
 .club-eid {
-  width: 80%;
+  width: 70%;
   filter: drop-shadow(0 8px 24px rgba(0,0,0,.3));
 }
 
@@ -977,30 +996,12 @@ body::after {
 .club-kol {
   font-size: clamp(14px,3.5vw,20px);
   color: rgba(255,255,255,.95);
+  opacity: 1;
   font-weight: 700;
   text-shadow: 0 2px 12px rgba(0,0,0,.3);
 }
 
-/* Name badge */
-.club-badge {
-  position: relative;
-  left: auto;
-  bottom: auto;
-  top: auto;
-  transform: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255,255,255,.12);
-  border: 1.5px solid rgba(255,255,255,.25);
-  border-radius: 20px;
-  padding: 14px 30px;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 10px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.1);
-  white-space: nowrap;
-  max-width: 86%;
-  z-index: 4;
-}
+
 
 .badge-glow-ring {
   position: absolute;
@@ -1019,7 +1020,7 @@ body::after {
 
 .b-name {
   color: var(--white);
-  font-size: clamp(18px, 5vw, 28px);
+  font-size: clamp(16px, 4vw, 24px);
   font-weight: 900;
   direction: rtl;
   text-shadow: 0 2px 10px rgba(0,0,0,.2);
@@ -1330,7 +1331,7 @@ body::after {
   .gen-btn, .back-btn, .dl-btn { min-height: 50px; }
   .corner-burst { width: 80px; height: 80px; }
   .club-center { padding: 78px 16px 124px; }
-  .club-badge { bottom: 24px; padding: 12px 22px; }
+  .club-badge { padding: 12px 22px; }
   .hero-balloons { width: 120px; }
   .hero-fireworks { width: 75px; }
 }
