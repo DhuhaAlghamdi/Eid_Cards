@@ -211,16 +211,15 @@ function downloadCard() {
     backgroundColor: null,
     logging: false,
     imageTimeout: 12000,
-    onclone: (doc) => {
-      // Ensure Arabic text renders correctly
-
-  doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar').forEach(el => {
-    el.style.direction = 'rtl';
-    el.style.unicodeBidi = 'embed';
-    el.style.fontFamily = 'Tajawal, Cairo, sans-serif';
-      });
+onclone: (doc, element) => {
+  element.querySelectorAll('*').forEach(el => {
+    const style = window.getComputedStyle(el);
+    if (style.direction === 'rtl' || el.textContent.trim()) {
+      el.style.direction = 'rtl';
+      el.style.unicodeBidi = 'bidi-override';
     }
-  }).then(canvas => {
+  });
+}).then(canvas => {
     const link = document.createElement('a');
     link.download = 'mlsac-eid-1447.png';
     link.href = canvas.toDataURL('image/png');
@@ -364,3 +363,4 @@ document.head.appendChild(shakeStyle);
 
 createFloatingShapes();
 initParticleCanvas();
+
