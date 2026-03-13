@@ -306,22 +306,29 @@ async function drawClubCard() {
   ctx.fillText('نادي مايكروسوفت', logoX - 12, topH/2 + 22);
   ctx.restore();
 
-  // 5. صورة happyeid
+  // 5. صورة happyeid — نحسب ارتفاعها الفعلي ونبني باقي العناصر تحتها
   const eidImg = await loadImage('image/happyeid.png');
+  const eidW   = S * 0.60;
+  const eidX   = (S - eidW) / 2;
+  const eidY   = topH + 30;
+  let   eidBottom = eidY + eidW * 0.45; // fallback لو الصورة ما حملت
+
   if (eidImg) {
-    const eidW = S * 0.60;
-    const eidH = eidW * (eidImg.height / eidImg.width);
-    const eidX = (S - eidW) / 2;
-    const eidY = topH + S * 0.05;
+    const maxH   = S * 0.37;
+    const natH   = eidW * (eidImg.height / eidImg.width);
+    const finalH = Math.min(natH, maxH);
+    const finalW = natH > maxH ? maxH * (eidImg.width / eidImg.height) : eidW;
+    const finalX = (S - finalW) / 2;
+    eidBottom = eidY + finalH;
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.3)';
     ctx.shadowBlur  = 22;
-    ctx.drawImage(eidImg, eidX, eidY, eidW, eidH);
+    ctx.drawImage(eidImg, finalX, eidY, finalW, finalH);
     ctx.restore();
   }
 
-  // 6. "كل عام وأنتم بخير"
-  const kolY = topH + S * 0.475;
+  // 6. "كل عام وأنتم بخير" — تحت الصورة مباشرة
+  const kolY = eidBottom + 60;
 
   ctx.fillStyle = '#FFB900';
   ctx.font = '700 26px serif';
@@ -330,24 +337,24 @@ async function drawClubCard() {
   ctx.fillText('✦', S/2 + 235, kolY + 5);
 
   ctx.save();
-  ctx.textAlign  = 'center';
-  ctx.direction  = 'rtl';
-  ctx.fillStyle  = 'rgba(255,255,255,0.95)';
-  ctx.font       = '700 50px Cairo, Tajawal, sans-serif';
+  ctx.textAlign   = 'center';
+  ctx.direction   = 'rtl';
+  ctx.fillStyle   = 'rgba(255,255,255,0.95)';
+  ctx.font        = '700 50px Cairo, Tajawal, sans-serif';
   ctx.shadowColor = 'rgba(0,0,0,0.22)';
   ctx.shadowBlur  = 10;
   ctx.fillText('كل عام وأنتم بخير', S/2, kolY);
   ctx.restore();
 
-  // 7. البادج
+  // 7. البادج — تحت النص مباشرة
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
-  const badgeCY = topH + S * 0.655;
+  const badgeCY = kolY + 80;
   const badgeW  = S * 0.47;
   const badgeH  = role ? 140 : 98;
   const badgeX  = (S - badgeW) / 2;
-  const badgeY  = badgeCY - badgeH / 2;
+  const badgeY  = badgeCY;
 
   ctx.save();
   ctx.shadowColor   = 'rgba(0,0,0,0.28)';
