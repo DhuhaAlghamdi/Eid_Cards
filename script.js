@@ -1,5 +1,5 @@
 // =============================================
-//  MLSAC Eid Generator — script.js (v2)
+//  MLSAC Eid Generator — script.js (modified)
 // =============================================
 
 let majorTemplate = 0; // 1=club, 2=general
@@ -9,11 +9,9 @@ let majorTemplate = 0; // 1=club, 2=general
 function chooseMajor(n) {
   majorTemplate = n;
 
-  // Animate the option selection
   document.getElementById('mainOpt1').classList.toggle('active', n === 1);
   document.getElementById('mainOpt2').classList.toggle('active', n === 2);
 
-  // Brief delay for visual feedback then transition
   setTimeout(() => {
     document.getElementById('step1').classList.add('hidden');
 
@@ -44,7 +42,6 @@ function goBackFromResult() {
   document.getElementById('mainOpt1').classList.remove('active');
   document.getElementById('mainOpt2').classList.remove('active');
 
-  // Clear inputs
   ['nameA', 'roleA', 'nameB'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -68,14 +65,13 @@ function requireName(inputId) {
   if (!val) {
     el.focus();
     el.style.borderColor = '#F25022';
-    el.style.boxShadow = '0 0 0 3px rgba(242,80,34,.2)';
-    el.style.animation = 'shake .35s ease both';
+    el.style.boxShadow   = '0 0 0 3px rgba(242,80,34,.2)';
+    el.style.animation   = 'shake .35s ease both';
 
-    // Shake animation via class
     el.classList.add('input-error');
     setTimeout(() => {
       el.style.borderColor = '';
-      el.style.boxShadow = '';
+      el.style.boxShadow   = '';
       el.classList.remove('input-error');
     }, 1400);
     return null;
@@ -153,12 +149,7 @@ function generateClub() {
 
   const roleEl = document.getElementById('outRole1');
   roleEl.textContent = role;
-  const roleSvg = document.getElementById('rolesvg');
-  if (role) {
-    roleSvg.style.display = 'block';
-  } else {
-    roleSvg.style.display = 'none';
-  }
+  roleEl.classList.toggle('show', !!role);
 
   buildClubStars();
   showResult('clubCard');
@@ -196,6 +187,133 @@ function showResult(visibleId) {
   }, 150);
 }
 
+// ── Arabic text → SVG helpers ─────────────────
+
+function escapeXml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function toDataUri(svg) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function createArabicSvgDataUrl(text, opts = {}) {
+  const width = Math.max(10, Math.ceil(opts.width || 200));
+  const height = Math.max(10, Math.ceil(opts.height || 60));
+  const fontSize = Math.max(10, Math.round(opts.fontSize || 24));
+  const fontWeight = opts.fontWeight || 700;
+  const fill = opts.color || '#ffffff';
+  const family = opts.fontFamily || "'Cairo','Tajawal',sans-serif";
+  const align = opts.align || 'center';
+  const stroke = opts.stroke || 'none';
+  const strokeWidth = opts.strokeWidth || 0;
+  const shadowColor = opts.shadowColor || 'transparent';
+  const shadowBlur = opts.shadowBlur || 0;
+
+  let x = width / 2;
+  let anchor = 'middle';
+
+  if (align === 'right') {
+    x = width - 6;
+    anchor = 'end';
+  } else if (align === 'left') {
+    x = 6;
+    anchor = 'start';
+  }
+
+  const y = Math.round(height * 0.70);
+  const safeText = escapeXml(text);
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <defs>
+        <filter id="txtShadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="2" stdDeviation="${shadowBlur}" flood-color="${shadowColor}" flood-opacity="1"/>
+        </filter>
+      </defs>
+      <rect width="100%" height="100%" fill="transparent"/>
+      <text
+        x="${x}"
+        y="${y}"
+        font-family="${family}"
+        font-size="${fontSize}"
+        font-weight="${fontWeight}"
+        fill="${fill}"
+        text-anchor="${anchor}"
+        direction="rtl"
+        unicode-bidi="bidi-override"
+        dominant-baseline="alphabetic"
+        filter="url(#txtShadow)"
+        stroke="${stroke}"
+        stroke-width="${strokeWidth}"
+        paint-order="stroke"
+      >${safeText}</text>
+    </svg>
+  `;
+
+  return toDataUri(svg);
+}
+
+function replaceArabicTextWithSvg(doc, selector, options = {}) {
+  doc.querySelectorAll(selector).forEach(el => {
+    const text = (el.textContent || '').trim();
+    if (!text) return;
+
+    const rect = el.getBoundingClientRect();
+    const width = Math.max(el.offsetWidth, rect.width, options.minWidth || 20);
+    const height = Math.max(el.offsetHeight, rect.height, options.minHeight || 20);
+
+    const style = window.getComputedStyle(el);
+    const fontSize = parseFloat(style.fontSize) || options.fontSize || 20;
+    const fontWeight = style.fontWeight || options.fontWeight || 700;
+    const color = style.color || options.color || '#fff';
+    const textAlign = options.align || style.textAlign || 'center';
+
+    const img = doc.createElement('img');
+    img.src = createArabicSvgDataUrl(text, {
+      width,
+      height,
+      fontSize,
+      fontWeight,
+      color,
+      fontFamily: options.fontFamily || style.fontFamily || "'Cairo','Tajawal',sans-serif",
+      align: textAlign === 'right' ? 'right' : textAlign === 'left' ? 'left' : 'center',
+      stroke: options.stroke || 'none',
+      strokeWidth: options.strokeWidth || 0,
+      shadowColor: options.shadowColor || 'transparent',
+      shadowBlur: options.shadowBlur || 0
+    });
+
+    img.alt = text;
+    img.style.width = `${width}px`;
+    img.style.height = `${height}px`;
+    img.style.display = 'block';
+    img.style.objectFit = 'contain';
+
+    if (textAlign === 'right') {
+      img.style.marginLeft = 'auto';
+      img.style.marginRight = '0';
+    } else if (textAlign === 'left') {
+      img.style.marginLeft = '0';
+      img.style.marginRight = 'auto';
+    } else {
+      img.style.marginLeft = 'auto';
+      img.style.marginRight = 'auto';
+    }
+
+    el.textContent = '';
+    el.style.color = 'transparent';
+    el.style.textShadow = 'none';
+    el.style.lineHeight = '1';
+    el.appendChild(img);
+  });
+}
+
 // ── Download ──────────────────────────────────
 
 function downloadCard() {
@@ -223,15 +341,44 @@ function downloadCard() {
       doc.documentElement.setAttribute('dir', 'rtl');
       doc.body.setAttribute('dir', 'rtl');
 
-      doc.querySelectorAll('svg').forEach(el => {
-        el.style.display = 'block';
+      doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar').forEach(el => {
+        el.style.direction = 'rtl';
+        el.style.unicodeBidi = 'plaintext';
+        el.style.fontFamily = 'Cairo, Tajawal, sans-serif';
       });
 
-      doc.querySelectorAll('.b-name, .gen1-name, .club-en-name, .footer-txt').forEach(el => {
-        el.style.direction = 'rtl';
-        el.style.unicodeBidi = 'embed';
-        el.style.fontFamily = 'Tajawal, Cairo, sans-serif';
-        el.style.textAlign = 'right';
+      replaceArabicTextWithSvg(doc, '.club-ar-name', {
+        align: 'center',
+        shadowColor: 'rgba(0,0,0,.15)',
+        shadowBlur: 0.6
+      });
+
+      replaceArabicTextWithSvg(doc, '.club-kol', {
+        align: 'center',
+        shadowColor: 'rgba(0,0,0,.35)',
+        shadowBlur: 1.2
+      });
+
+      replaceArabicTextWithSvg(doc, '.b-name', {
+        align: 'center',
+        shadowColor: 'rgba(0,0,0,.25)',
+        shadowBlur: 1
+      });
+
+      replaceArabicTextWithSvg(doc, '.b-role', {
+        align: 'center',
+        shadowColor: 'rgba(0,0,0,.15)',
+        shadowBlur: 0.8
+      });
+
+      replaceArabicTextWithSvg(doc, '.gen1-name', {
+        align: 'center',
+        shadowColor: 'rgba(0,0,0,.45)',
+        shadowBlur: 1.4
+      });
+
+      replaceArabicTextWithSvg(doc, '.footer-txt-ar', {
+        align: 'center'
       });
     }
 
