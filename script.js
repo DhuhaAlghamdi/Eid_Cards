@@ -29,11 +29,11 @@ function goBack() {
 
 function goBackFromResult() {
   document.getElementById('resultSection').classList.add('hidden');
-  ['clubCard','genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['clubCard', 'genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
   document.getElementById('step1').classList.remove('hidden');
   document.getElementById('mainOpt1').classList.remove('active');
   document.getElementById('mainOpt2').classList.remove('active');
-  ['nameA','roleA','nameB'].forEach(id => {
+  ['nameA', 'roleA', 'nameB'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -62,30 +62,46 @@ function requireName(inputId) {
   return val;
 }
 
-const STAR_POSITIONS = [[8,12],[15,55],[88,10],[82,60],[50,6],[50,94],[22,30],[75,30]];
+const STAR_POSITIONS = [[8, 12], [15, 55], [88, 10], [82, 60], [50, 6], [50, 94], [22, 30], [75, 30]];
 
 function buildClubStars() {
   const container = document.getElementById('clubStars');
   if (!container) return;
   container.innerHTML = '';
-  STAR_POSITIONS.forEach(([x,y],i) => {
+  STAR_POSITIONS.forEach(([x, y], i) => {
     const star = document.createElement('div');
-    star.style.cssText = `position:absolute;left:${x}%;top:${y}%;color:rgba(255,255,255,${0.3+Math.random()*0.5});font-size:${Math.random()*10+8}px;animation:popTwinkle ${2+Math.random()*2}s ${i*0.2}s infinite;pointer-events:none;`;
-    star.textContent = Math.random()>0.5 ? '✦' : '✧';
+    star.style.cssText = `
+      position:absolute;
+      left:${x}%;
+      top:${y}%;
+      color:rgba(255,255,255,${0.3 + Math.random() * 0.5});
+      font-size:${Math.random() * 10 + 8}px;
+      animation:popTwinkle ${2 + Math.random() * 2}s ${i * 0.2}s infinite;
+      pointer-events:none;
+    `;
+    star.textContent = Math.random() > 0.5 ? '✦' : '✧';
     container.appendChild(star);
   });
 }
 
-const FESTIVE_POS = [[8,10],[14,16],[86,10],[80,18],[11,82],[86,76],[50,8],[50,92],[30,25],[70,75],[20,60],[80,40]];
+const FESTIVE_POS = [[8, 10], [14, 16], [86, 10], [80, 18], [11, 82], [86, 76], [50, 8], [50, 92], [30, 25], [70, 75], [20, 60], [80, 40]];
 
 function buildFestiveDecor(containerId, colorA, colorB) {
   const c = document.getElementById(containerId);
   if (!c) return;
   c.innerHTML = '';
-  FESTIVE_POS.forEach(([x,y],i) => {
+  FESTIVE_POS.forEach(([x, y], i) => {
     const el = document.createElement('div');
     el.className = 'c-confetti';
-    el.style.cssText = `left:${x}%;top:${y}%;width:${Math.random()*8+5}px;height:${Math.random()*8+5}px;background:${Math.random()>.5?colorA:colorB};animation-delay:${i*.16}s;animation-duration:${2+Math.random()*2}s;`;
+    el.style.cssText = `
+      left:${x}%;
+      top:${y}%;
+      width:${Math.random() * 8 + 5}px;
+      height:${Math.random() * 8 + 5}px;
+      background:${Math.random() > .5 ? colorA : colorB};
+      animation-delay:${i * .16}s;
+      animation-duration:${2 + Math.random() * 2}s;
+    `;
     c.appendChild(el);
   });
 }
@@ -93,13 +109,17 @@ function buildFestiveDecor(containerId, colorA, colorB) {
 function generateClub() {
   const happyImg = document.getElementById('happyEidImg');
   if (happyImg) happyImg.src = 'image/happyeid.png';
+
   const name = requireName('nameA');
   if (!name) return;
+
   const role = document.getElementById('roleA').value.trim();
   document.getElementById('outName1').textContent = name;
+
   const roleEl = document.getElementById('outRole1');
   roleEl.textContent = role;
   roleEl.classList.toggle('show', !!role);
+
   buildClubStars();
   showResult('clubCard');
 }
@@ -107,132 +127,517 @@ function generateClub() {
 function generateGeneral() {
   const name = requireName('nameB');
   if (!name) return;
+
   document.getElementById('outName2').textContent = name;
-  buildFestiveDecor('gen1Decor','#ffffff','rgba(80,230,255,.9)');
+  buildFestiveDecor('gen1Decor', '#ffffff', 'rgba(80,230,255,.9)');
   showResult('genCard1');
 }
 
 function showResult(visibleId) {
-  ['step1','step2A','step2B'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  ['clubCard','genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['step1', 'step2A', 'step2B'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['clubCard', 'genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
   document.getElementById(visibleId).classList.remove('hidden');
+
   const section = document.getElementById('resultSection');
   section.classList.remove('hidden');
-  setTimeout(() => section.scrollIntoView({ behavior:'smooth', block:'start' }), 150);
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
 }
 
 // ══════════════════════════════════════════════
-//  Download — html2canvas بدون تلوث cross-origin
+//  helpers
+// ══════════════════════════════════════════════
+
+function loadImage(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// يرسم أي نص كصورة SVG بدل fillText
+function textToImage(text, opts = {}) {
+  const fontSize = opts.fontSize || 48;
+  const color = opts.color || '#ffffff';
+  const fontFamily = opts.fontFamily || 'Cairo, Tajawal, sans-serif';
+  const fontWeight = opts.fontWeight || '700';
+  const canvasW = opts.width || 900;
+  const canvasH = opts.height || Math.ceil(fontSize * 1.8);
+  const direction = opts.direction || 'rtl'; // rtl أو ltr
+  const align = opts.align || 'center'; // center / right / left
+
+  const safeText = String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+  let x = canvasW / 2;
+  let anchor = 'middle';
+
+  if (align === 'right') {
+    x = canvasW - 8;
+    anchor = 'end';
+  } else if (align === 'left') {
+    x = 8;
+    anchor = 'start';
+  }
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}" viewBox="0 0 ${canvasW} ${canvasH}">
+      <style>
+        text {
+          font-family: ${fontFamily};
+          font-size: ${fontSize}px;
+          font-weight: ${fontWeight};
+          fill: ${color};
+          direction: ${direction};
+          unicode-bidi: plaintext;
+          dominant-baseline: middle;
+          text-anchor: ${anchor};
+        }
+      </style>
+      <text x="${x}" y="${canvasH / 2}">${safeText}</text>
+    </svg>
+  `;
+
+  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
+
+// ══════════════════════════════════════════════
+//  رسم Club Card
+// ══════════════════════════════════════════════
+
+async function drawClubCard() {
+  const S = 1200;
+  const canvas = document.createElement('canvas');
+  canvas.width = S;
+  canvas.height = S;
+  const ctx = canvas.getContext('2d');
+
+  // ── خلفية ──
+  const bg = ctx.createLinearGradient(0, 0, S * 0.6, S);
+  bg.addColorStop(0, '#041530');
+  bg.addColorStop(0.35, '#0a2568');
+  bg.addColorStop(0.70, '#0d5bc9');
+  bg.addColorStop(1, '#1a78e8');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, S, S);
+
+  const r1 = ctx.createRadialGradient(S * 0.3, 0, 0, S * 0.3, 0, S * 0.55);
+  r1.addColorStop(0, 'rgba(80,230,255,0.13)');
+  r1.addColorStop(1, 'transparent');
+  ctx.fillStyle = r1;
+  ctx.fillRect(0, 0, S, S);
+
+  const r2 = ctx.createRadialGradient(S * 0.7, S, 0, S * 0.7, S, S * 0.55);
+  r2.addColorStop(0, 'rgba(0,120,212,0.2)');
+  r2.addColorStop(1, 'transparent');
+  ctx.fillStyle = r2;
+  ctx.fillRect(0, 0, S, S);
+
+  // شبكة
+  ctx.strokeStyle = 'rgba(255,255,255,0.022)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < S; x += 48) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, S);
+    ctx.stroke();
+  }
+  for (let y = 0; y < S; y += 48) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(S, y);
+    ctx.stroke();
+  }
+
+  // نجوم كصور SVG
+  const starsData = [
+    [0.08, 0.14], [0.88, 0.12], [0.15, 0.58], [0.82, 0.62], [0.50, 0.08],
+    [0.22, 0.32], [0.75, 0.32], [0.35, 0.78], [0.65, 0.22], [0.12, 0.48],
+    [0.90, 0.82], [0.50, 0.92]
+  ];
+
+  for (const [xr, yr] of starsData) {
+    const size = Math.round(Math.random() * 12 + 7);
+    const symbol = Math.random() > 0.5 ? '✦' : '✧';
+    const alpha = (0.2 + Math.random() * 0.35).toFixed(2);
+
+    const starImg = await textToImage(symbol, {
+      fontSize: size,
+      color: `rgba(255,255,255,${alpha})`,
+      fontFamily: 'serif',
+      fontWeight: '700',
+      width: size * 3,
+      height: size * 3,
+      direction: 'ltr',
+      align: 'center'
+    });
+
+    if (starImg) {
+      const w = size * 2.2;
+      const h = size * 2.2;
+      ctx.drawImage(starImg, xr * S - w / 2, yr * S - h / 2, w, h);
+    }
+  }
+
+  // ── هيدر ──
+  const hdrH = S * 0.13;
+  const hdrGrad = ctx.createLinearGradient(0, 0, 0, hdrH * 1.5);
+  hdrGrad.addColorStop(0, 'rgba(0,8,30,0.92)');
+  hdrGrad.addColorStop(1, 'rgba(0,8,30,0)');
+  ctx.fillStyle = hdrGrad;
+  ctx.fillRect(0, 0, S, hdrH * 1.5);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, hdrH);
+  ctx.lineTo(S, hdrH);
+  ctx.stroke();
+
+  // لوغو
+  const logoImg = await loadImage('image/logo.png');
+  const logoSize = Math.round(hdrH * 0.60);
+  const logoCX = S / 2 + 20;
+  const logoY = (hdrH - logoSize) / 2;
+
+  if (logoImg) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(80,230,255,0.3)';
+    ctx.shadowBlur = 16;
+    ctx.drawImage(logoImg, logoCX, logoY, logoSize, logoSize);
+    ctx.restore();
+  }
+
+  // عنوان إنجليزي كصورة SVG
+  const txtX = logoCX - 12;
+  const enTitleImg = await textToImage('Microsoft LSAC Club', {
+    fontSize: Math.round(hdrH * 0.21),
+    color: '#ffffff',
+    fontFamily: 'Cairo, Tajawal, sans-serif',
+    fontWeight: '800',
+    width: 520,
+    height: Math.round(hdrH * 0.28),
+    direction: 'ltr',
+    align: 'right'
+  });
+
+  if (enTitleImg) {
+    ctx.drawImage(
+      enTitleImg,
+      txtX - 520,
+      hdrH * 0.24,
+      520,
+      Math.round(hdrH * 0.28)
+    );
+  }
+
+  // عنوان عربي كصورة SVG
+  const arNameImg = await textToImage('نادي مايكروسوفت', {
+    fontSize: Math.round(hdrH * 0.19),
+    color: '#50E6FF',
+    width: 500,
+    height: Math.round(hdrH * 0.35),
+    direction: 'rtl',
+    align: 'center'
+  });
+
+  if (arNameImg) {
+    ctx.drawImage(arNameImg, txtX - 500, hdrH * 0.54, 500, Math.round(hdrH * 0.35));
+  }
+
+  // ── صورة happy eid ──
+  const eidTop = S * 0.13;
+  const eidBot = S * 0.48;
+  const eidImg = await loadImage('image/happyeid.png');
+
+  if (eidImg) {
+    const maxW = S * 0.72;
+    const maxH = eidBot - eidTop - 10;
+    const natR = eidImg.width / eidImg.height;
+
+    let dW = maxW;
+    let dH = maxW / natR;
+
+    if (dH > maxH) {
+      dH = maxH;
+      dW = maxH * natR;
+    }
+
+    const dX = (S - dW) / 2;
+    const dY = eidTop + (maxH - dH) / 2 + 5;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.28)';
+    ctx.shadowBlur = 20;
+    ctx.drawImage(eidImg, dX, dY, dW, dH);
+    ctx.restore();
+  }
+
+  // ── كل عام وأنتم بخير ──
+  const kolCY = S * 0.535;
+
+  const goldStarImg = await textToImage('✦', {
+    fontSize: 28,
+    color: '#FFB900',
+    fontFamily: 'serif',
+    fontWeight: '700',
+    width: 70,
+    height: 70,
+    direction: 'ltr',
+    align: 'center'
+  });
+
+  if (goldStarImg) {
+    ctx.drawImage(goldStarImg, S / 2 - 230 - 18, kolCY - 18, 36, 36);
+    ctx.drawImage(goldStarImg, S / 2 + 230 - 18, kolCY - 18, 36, 36);
+  }
+
+  const kolImg = await textToImage('كل عام وأنتم بخير', {
+    fontSize: Math.round(S * 0.043),
+    color: 'rgba(255,255,255,0.95)',
+    fontWeight: '700',
+    width: S * 0.70,
+    height: Math.round(S * 0.072),
+    direction: 'rtl',
+    align: 'center'
+  });
+
+  if (kolImg) {
+    ctx.drawImage(kolImg, S / 2 - (S * 0.70) / 2, kolCY - Math.round(S * 0.055), S * 0.70, Math.round(S * 0.072));
+  }
+
+  // ── بادج الاسم والمنصب ──
+  const name = document.getElementById('outName1').textContent.trim();
+  const role = document.getElementById('outRole1').textContent.trim();
+
+  const bdgCY = S * 0.705;
+  const bdgW = S * 0.42;
+  const bdgH = role ? S * 0.135 : S * 0.092;
+  const bdgX = (S - bdgW) / 2;
+  const bdgY = bdgCY - bdgH / 2;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.25)';
+  ctx.shadowBlur = 24;
+  ctx.shadowOffsetY = 7;
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  roundRect(ctx, bdgX, bdgY, bdgW, bdgH, 18);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 2;
+  roundRect(ctx, bdgX, bdgY, bdgW, bdgH, 18);
+  ctx.stroke();
+
+  const nameFontSize = role ? Math.round(S * 0.038) : Math.round(S * 0.044);
+  const nameImg = await textToImage(name, {
+    fontSize: nameFontSize,
+    color: '#ffffff',
+    fontFamily: 'Amiri, Cairo, Tajawal, sans-serif',
+    width: bdgW,
+    height: Math.round(nameFontSize * 1.6),
+    direction: 'rtl',
+    align: 'center'
+  });
+
+  if (nameImg) {
+    const nameY = role ? bdgY + bdgH * 0.08 : bdgY + bdgH * 0.18;
+    ctx.drawImage(nameImg, bdgX, nameY, bdgW, Math.round(nameFontSize * 1.6));
+  }
+
+  if (role) {
+    const roleFontSize = Math.round(S * 0.026);
+    const roleImg = await textToImage(role, {
+      fontSize: roleFontSize,
+      color: '#50E6FF',
+      width: bdgW,
+      height: Math.round(roleFontSize * 1.6),
+      direction: 'rtl',
+      align: 'center'
+    });
+
+    if (roleImg) {
+      ctx.drawImage(roleImg, bdgX, bdgY + bdgH * 0.52, bdgW, Math.round(roleFontSize * 1.6));
+    }
+  }
+
+  // ── فوتر ──
+  const ftTop = S * 0.88;
+  const ftGrad = ctx.createLinearGradient(0, ftTop, 0, S);
+  ftGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  ftGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+  ctx.fillStyle = ftGrad;
+  ctx.fillRect(0, ftTop, S, S - ftTop);
+
+  const ftCY = S * 0.944;
+
+  if (logoImg) {
+    ctx.save();
+    ctx.globalAlpha = 0.72;
+    ctx.drawImage(logoImg, S / 2 + 50, ftCY - 14, 28, 28);
+    ctx.restore();
+  }
+
+  const ftImg = await textToImage('عيد مبارك  ·  MLSA 2026  ·', {
+    fontSize: Math.round(S * 0.018),
+    color: 'rgba(255,255,255,0.65)',
+    width: 700,
+    height: Math.round(S * 0.032),
+    direction: 'rtl',
+    align: 'center'
+  });
+
+  if (ftImg) {
+    ctx.drawImage(ftImg, S / 2 - 350 + 14, ftCY - Math.round(S * 0.025), 700, Math.round(S * 0.032));
+  }
+
+  return canvas;
+}
+
+// ══════════════════════════════════════════════
+//  رسم General Card
+// ══════════════════════════════════════════════
+
+async function drawGeneralCard() {
+  const W = 900;
+  const H = 1200;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const bgImg = await loadImage('image/eid.png');
+  if (bgImg) {
+    ctx.drawImage(bgImg, 0, 0, W, H);
+  } else {
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, '#881c3c');
+    g.addColorStop(1, '#d24a73');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  const ov = ctx.createLinearGradient(0, H * 0.5, 0, H);
+  ov.addColorStop(0, 'rgba(0,0,0,0.05)');
+  ov.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = ov;
+  ctx.fillRect(0, 0, W, H);
+
+  const name = document.getElementById('outName2').textContent.trim();
+  const bW = Math.min(W * 0.82, 700);
+  const bH = 130;
+  const bX = (W - bW) / 2;
+  const bY = H * 0.72 - bH / 2;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  roundRect(ctx, bX, bY, bW, bH, 40);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+  ctx.lineWidth = 2.5;
+  roundRect(ctx, bX, bY, bW, bH, 40);
+  ctx.stroke();
+
+  const nameImg = await textToImage(name, {
+    fontSize: 54,
+    color: '#ffffff',
+    fontFamily: 'Cairo, Tajawal, sans-serif',
+    fontWeight: '900',
+    width: bW,
+    height: bH,
+    direction: 'rtl',
+    align: 'center'
+  });
+
+  if (nameImg) {
+    ctx.drawImage(nameImg, bX, bY, bW, bH);
+  }
+
+  return canvas;
+}
+
+// ══════════════════════════════════════════════
+//  Download
 // ══════════════════════════════════════════════
 
 async function downloadCard() {
-  const card = ['clubCard','genCard1']
+  const card = ['clubCard', 'genCard1']
     .map(id => document.getElementById(id))
     .find(el => !el.classList.contains('hidden'));
+
   if (!card) return;
 
   const btn = document.getElementById('dlBtn');
   btn.innerHTML = 'جاري التحميل...';
-  btn.disabled  = true;
+  btn.disabled = true;
 
-  if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+
+  await new Promise(r => setTimeout(r, 700));
 
   try {
-    // ── الخطوة المهمة: نحول كل الصور لـ dataURL قبل html2canvas ──
-    // هذا يمنع "tainted canvas" على iOS
-    await preloadImagesAsDataURL(card);
-    await new Promise(r => setTimeout(r, 600));
+    const canvas = card.id === 'clubCard'
+      ? await drawClubCard()
+      : await drawGeneralCard();
 
-    const canvas = await html2canvas(card, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: true,   // ← مهم على iOS
-      backgroundColor: null,
-      logging: false,
-      imageTimeout: 20000,
-      foreignObjectRendering: false,
-
-      onclone: (doc) => {
-        // أوقف الأنيميشن
-        const s = doc.createElement('style');
-        s.textContent = `*,*::before,*::after{animation:none!important;transition:none!important;}`;
-        doc.head.appendChild(s);
-
-        // اجبر RTL وظهور النصوص
-        doc.documentElement.setAttribute('dir','rtl');
-        doc.documentElement.setAttribute('lang','ar');
-        doc.body.setAttribute('dir','rtl');
-
-        const fix = doc.createElement('style');
-        fix.textContent = `
-          .b-name,.b-role,.gen1-name,.club-kol,
-          .club-ar-name,.footer-txt-ar,.footer-copy,
-          .club-en-name,.footer-txt {
-            opacity:1!important; visibility:visible!important;
-            direction:rtl!important; unicode-bidi:embed!important;
-            text-align:center!important;
-            -webkit-text-fill-color:inherit!important;
-          }
-        `;
-        doc.head.appendChild(fix);
-
-        // اجبر ظهور البادج والاسم
-        ['.club-badge','.b-info'].forEach(sel => {
-          const el = doc.querySelector(sel);
-          if(el){ el.style.opacity='1'; el.style.visibility='visible'; el.style.display='flex'; }
-        });
-        const nm = doc.querySelector('.b-name');
-        if(nm){ nm.style.opacity='1'; nm.style.visibility='visible'; nm.style.color='#fff'; nm.style.webkitTextFillColor='#fff'; }
-        const rl = doc.querySelector('.b-role');
-        if(rl){ const h=rl.textContent.trim().length>0; rl.style.display=h?'block':'none'; rl.style.opacity='1'; rl.style.color='#50E6FF'; rl.style.webkitTextFillColor='#50E6FF'; }
-        const kl = doc.querySelector('.club-kol');
-        if(kl){ kl.style.opacity='1'; kl.style.visibility='visible'; kl.style.color='rgba(255,255,255,0.95)'; kl.style.webkitTextFillColor='rgba(255,255,255,0.95)'; }
-        const gn = doc.querySelector('.gen1-name');
-        if(gn){ gn.style.opacity='1'; gn.style.visibility='visible'; gn.style.color='#fff'; gn.style.webkitTextFillColor='#fff'; }
-      }
-    });
-
-    // استخدم toBlob بدل toDataURL — يتجنب "insecure" على iOS
-    canvas.toBlob(blob => {
-      const url  = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.download = 'mlsac-eid-1447.png';
-      link.href = url;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 3000);
-    }, 'image/png');
+    const link = document.createElement('a');
+    link.download = 'mlsac-eid-1447.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
 
     btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
     setTimeout(() => {
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-      btn.disabled  = false;
+      btn.disabled = false;
     }, 2200);
-
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     alert('حدث خطأ: ' + err.message);
     btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-    btn.disabled  = false;
+    btn.disabled = false;
   }
-}
-
-// تحويل صور الكارد لـ dataURL قبل html2canvas
-async function preloadImagesAsDataURL(card) {
-  const imgs = card.querySelectorAll('img');
-  const promises = Array.from(imgs).map(img => {
-    return new Promise(resolve => {
-      if (!img.src || img.src.startsWith('data:')) { resolve(); return; }
-      fetch(img.src)
-        .then(r => r.blob())
-        .then(blob => {
-          const reader = new FileReader();
-          reader.onload = e => { img.src = e.target.result; resolve(); };
-          reader.readAsDataURL(blob);
-        })
-        .catch(() => resolve());
-    });
-  });
-  await Promise.all(promises);
 }
 
 // ══════════════════════════════════════════════
@@ -241,46 +646,110 @@ async function preloadImagesAsDataURL(card) {
 
 function createFloatingShapes() {
   const container = document.getElementById('floatingShapes');
-  const colors = ['#0078D4','#50E6FF','#FFB900','#7FBA00'];
-  const shapes = ['◆','✦','●','▪'];
-  for(let i=0;i<18;i++){
-    const el=document.createElement('div');
-    el.className='float-shape';
-    const size=Math.random()*12+4, useEmoji=Math.random()>0.5;
-    el.style.cssText=`left:${Math.random()*100}%;bottom:-60px;width:${size}px;height:${size}px;${useEmoji?`color:${colors[Math.floor(Math.random()*colors.length)]};font-size:${size}px;`:`background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'3px'};transform:rotate(45deg);`}animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*12}s;`;
-    if(useEmoji) el.textContent=shapes[Math.floor(Math.random()*shapes.length)];
+  const colors = ['#0078D4', '#50E6FF', '#FFB900', '#7FBA00'];
+  const shapes = ['◆', '✦', '●', '▪'];
+
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'float-shape';
+
+    const size = Math.random() * 12 + 4;
+    const useEmoji = Math.random() > 0.5;
+
+    el.style.cssText = `
+      left:${Math.random() * 100}%;
+      bottom:-60px;
+      width:${size}px;
+      height:${size}px;
+      ${useEmoji
+        ? `color:${colors[Math.floor(Math.random() * colors.length)]};font-size:${size}px;`
+        : `background:${colors[Math.floor(Math.random() * colors.length)]};border-radius:${Math.random() > 0.5 ? '50%' : '3px'};transform:rotate(45deg);`
+      }
+      animation-duration:${Math.random() * 12 + 8}s;
+      animation-delay:${Math.random() * 12}s;
+    `;
+
+    if (useEmoji) el.textContent = shapes[Math.floor(Math.random() * shapes.length)];
     container.appendChild(el);
   }
 }
 
 function initParticleCanvas() {
-  const canvas=document.getElementById('particleCanvas');
-  if(!canvas) return;
-  const ctx=canvas.getContext('2d');
-  let W=window.innerWidth, H=window.innerHeight;
-  canvas.width=W; canvas.height=H;
-  window.addEventListener('resize',()=>{W=window.innerWidth;H=window.innerHeight;canvas.width=W;canvas.height=H;});
-  const particles=[];
-  for(let i=0;i<30;i++) particles.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.5,speedX:(Math.random()-0.5)*0.3,speedY:(Math.random()-0.5)*0.3,alpha:Math.random()*0.5+0.1,color:Math.random()>0.5?'#50E6FF':'#FFB900'});
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    particles.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.globalAlpha=p.alpha;ctx.fill();p.x+=p.speedX;p.y+=p.speedY;if(p.x<0||p.x>W)p.speedX*=-1;if(p.y<0||p.y>H)p.speedY*=-1;});
+  const canvas = document.getElementById('particleCanvas');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  let W = window.innerWidth;
+  let H = window.innerHeight;
+
+  canvas.width = W;
+  canvas.height = H;
+
+  window.addEventListener('resize', () => {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+  });
+
+  const particles = [];
+  for (let i = 0; i < 30; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.5 + 0.5,
+      speedX: (Math.random() - 0.5) * 0.3,
+      speedY: (Math.random() - 0.5) * 0.3,
+      alpha: Math.random() * 0.5 + 0.1,
+      color: Math.random() > 0.5 ? '#50E6FF' : '#FFB900'
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+
+      p.x += p.speedX;
+      p.y += p.speedY;
+
+      if (p.x < 0 || p.x > W) p.speedX *= -1;
+      if (p.y < 0 || p.y > H) p.speedY *= -1;
+    });
     requestAnimationFrame(draw);
   }
+
   draw();
 }
 
-document.addEventListener('keypress',(e)=>{
-  if(e.key==='Enter'){
-    if(!document.getElementById('step2A').classList.contains('hidden')) generateClub();
-    else if(!document.getElementById('step2B').classList.contains('hidden')) generateGeneral();
+document.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    if (!document.getElementById('step2A').classList.contains('hidden')) {
+      generateClub();
+    } else if (!document.getElementById('step2B').classList.contains('hidden')) {
+      generateGeneral();
+    }
   }
 });
 
-const shakeStyle=document.createElement('style');
-shakeStyle.textContent=`
-  @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
-  .input-error{animation:shake .35s ease both !important;}
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    15%{transform:translateX(-8px)}
+    30%{transform:translateX(8px)}
+    45%{transform:translateX(-6px)}
+    60%{transform:translateX(6px)}
+    75%{transform:translateX(-3px)}
+    90%{transform:translateX(3px)}
+  }
+  .input-error{
+    animation:shake .35s ease both !important;
+  }
 `;
 document.head.appendChild(shakeStyle);
 
