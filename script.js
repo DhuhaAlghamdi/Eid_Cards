@@ -155,9 +155,9 @@ function generateClub() {
   roleEl.textContent = role;
   const roleSvg = document.getElementById('rolesvg');
   if (role) {
-    roleSvg.classList.remove('hidden');
+    roleSvg.style.display = 'block';
   } else {
-    roleSvg.classList.add('hidden');
+    roleSvg.style.display = 'none';
   }
 
   buildClubStars();
@@ -219,17 +219,21 @@ function downloadCard() {
     imageTimeout: 12000,
 
     onclone: (doc) => {
-  doc.documentElement.setAttribute('lang', 'ar');
-  doc.documentElement.setAttribute('dir', 'rtl');
-  doc.body.setAttribute('dir', 'rtl');
+      doc.documentElement.setAttribute('lang', 'ar');
+      doc.documentElement.setAttribute('dir', 'rtl');
+      doc.body.setAttribute('dir', 'rtl');
 
-  doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar').forEach(el => {
-    el.style.direction   = 'rtl';
-    el.style.unicodeBidi = 'embed';
-    el.style.fontFamily  = 'Tajawal, Cairo, sans-serif';
-    el.style.textAlign   = 'right';
-  });
-}
+      doc.querySelectorAll('svg').forEach(el => {
+        el.style.display = 'block';
+      });
+
+      doc.querySelectorAll('.b-name, .gen1-name, .club-en-name, .footer-txt').forEach(el => {
+        el.style.direction = 'rtl';
+        el.style.unicodeBidi = 'embed';
+        el.style.fontFamily = 'Tajawal, Cairo, sans-serif';
+        el.style.textAlign = 'right';
+      });
+    }
 
   }).then(canvas => {
     const link = document.createElement('a');
