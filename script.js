@@ -122,7 +122,7 @@ function showResult(visibleId) {
 }
 
 // ══════════════════════════════════════════════
-//  helpers
+//  Helpers
 // ══════════════════════════════════════════════
 
 function loadImage(src) {
@@ -148,41 +148,51 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// رسم نص عربي عبر SVG foreignObject ← يحل مشكلة الانعكاس 100%
-function arabicTextToImage(text, opts = {}) {
+// رسم نص عربي صح على canvas بدون SVG
+// الحل: نستخدم ctx.direction='rtl' مع textAlign='center'
+// وnرسم النص على offscreen canvas مستقل أولاً للتأكد
+function drawArabicText(ctx, text, x, y, opts = {}) {
   const fontSize   = opts.fontSize   || 48;
   const color      = opts.color      || '#ffffff';
-  const fontFamily = opts.fontFamily || 'Cairo, Tajawal, sans-serif';
+  const fontFamily = opts.fontFamily || '"Cairo", "Tajawal", sans-serif';
   const fontWeight = opts.fontWeight || '700';
-  const canvasW    = opts.width      || 900;
-  const canvasH    = opts.height     || Math.ceil(fontSize * 1.8);
+  const align      = opts.align      || 'center';
 
-  // نبني SVG يحتوي foreignObject بـ HTML عربي صح
-  const html = `<div xmlns="http://www.w3.org/1999/xhtml"
-    style="width:${canvasW}px;height:${canvasH}px;
-           display:flex;align-items:center;justify-content:center;
-           direction:rtl;unicode-bidi:embed;
-           font-family:${fontFamily};font-size:${fontSize}px;
-           font-weight:${fontWeight};color:${color};
-           white-space:nowrap;overflow:visible;"
-  >${text}</div>`;
+  ctx.save();
+  ctx.font        = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  ctx.fillStyle   = color;
+  ctx.textAlign   = align;
+  ctx.textBaseline = 'middle';
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg"
-    width="${canvasW}" height="${canvasH}">
-    <foreignObject width="${canvasW}" height="${canvasH}">
-      ${html}
-    </foreignObject>
-  </svg>`;
+  // الحل الصحيح لـ iOS Safari:
+  // نرسم على offscreen canvas بـ direction=rtl
+  // ثم نطبعه على الـ canvas الأساسي
+  const offscreen = document.createElement('canvas');
+  const measure   = ctx.measureText(text);
+  const tw        = Math.ceil(measure.width) + fontSize * 2;
+  const th        = Math.ceil(fontSize * 1.8);
+  offscreen.width  = tw;
+  offscreen.height = th;
 
-  const blob = new Blob([svg], {type:'image/svg+xml;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
+  const octx = offscreen.getContext('2d');
+  octx.font        = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  octx.fillStyle   = color;
+  octx.textAlign   = 'center';
+  octx.textBaseline = 'middle';
+  octx.direction   = 'rtl';
 
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
-    img.src = url;
-  });
+  octx.fillText(text, tw/2, th/2);
+
+  // ارسم الـ offscreen على الـ canvas الأساسي
+  if (align === 'center') {
+    ctx.drawImage(offscreen, x - tw/2, y - th/2);
+  } else if (align === 'right') {
+    ctx.drawImage(offscreen, x - tw, y - th/2);
+  } else {
+    ctx.drawImage(offscreen, x, y - th/2);
+  }
+
+  ctx.restore();
 }
 
 // ══════════════════════════════════════════════
@@ -195,7 +205,7 @@ async function drawClubCard() {
   canvas.width = S; canvas.height = S;
   const ctx = canvas.getContext('2d');
 
-  // ── خلفية ──
+  // خلفية
   const bg = ctx.createLinearGradient(0,0,S*0.6,S);
   bg.addColorStop(0,'#041530'); bg.addColorStop(0.35,'#0a2568');
   bg.addColorStop(0.70,'#0d5bc9'); bg.addColorStop(1,'#1a78e8');
@@ -224,7 +234,7 @@ async function drawClubCard() {
     ctx.fillText(Math.random()>0.5?'✦':'✧',xr*S,yr*S);
   });
 
-  // ── هيدر 0%→13% ──
+  // هيدر
   const hdrH = S*0.13;
   const hdrGrad=ctx.createLinearGradient(0,0,0,hdrH*1.5);
   hdrGrad.addColorStop(0,'rgba(0,8,30,0.92)'); hdrGrad.addColorStop(1,'rgba(0,8,30,0)');
@@ -232,7 +242,7 @@ async function drawClubCard() {
   ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(0,hdrH); ctx.lineTo(S,hdrH); ctx.stroke();
 
-  // لوغو في الهيدر
+  // لوغو
   const logoImg = await loadImage('image/logo.png');
   const logoSize = Math.round(hdrH*0.60);
   const logoCX = S/2 + 20;
@@ -243,28 +253,21 @@ async function drawClubCard() {
     ctx.restore();
   }
 
-  // "Microsoft LSAC Club" — إنجليزي فقط = ctx.fillText عادي
-  const txtX = logoCX - 12;
+  // "Microsoft LSAC Club" إنجليزي
   ctx.save();
-  ctx.textAlign='right'; ctx.direction='ltr';
-  ctx.fillStyle='#ffffff';
+  ctx.textAlign='right'; ctx.direction='ltr'; ctx.fillStyle='#ffffff';
   ctx.font=`800 ${Math.round(hdrH*0.21)}px Cairo,Tajawal,sans-serif`;
-  ctx.fillText('Microsoft LSAC Club', txtX, hdrH*0.38);
+  ctx.fillText('Microsoft LSAC Club', logoCX-12, hdrH*0.38);
   ctx.restore();
 
-  // "نادي مايكروسوفت" — عربي عبر SVG
-  const arNameImg = await arabicTextToImage('نادي مايكروسوفت', {
+  // "نادي مايكروسوفت" عربي
+  drawArabicText(ctx, 'نادي مايكروسوفت', logoCX - 12 - 200, hdrH*0.72, {
     fontSize: Math.round(hdrH*0.19),
     color: '#50E6FF',
-    width: 500,
-    height: Math.round(hdrH*0.35)
+    align: 'center'
   });
-  if(arNameImg){
-    // نرسمها يمين النص الإنجليزي
-    ctx.drawImage(arNameImg, txtX - 500, hdrH*0.54, 500, Math.round(hdrH*0.35));
-  }
 
-  // ── صورة happyeid (13%→48%) ──
+  // صورة happyeid
   const eidTop=S*0.13, eidBot=S*0.48;
   const eidImg=await loadImage('image/happyeid.png');
   if(eidImg){
@@ -278,29 +281,23 @@ async function drawClubCard() {
     ctx.restore();
   }
 
-  // ── "كل عام وأنتم بخير" (49%→59%) عبر SVG ──
+  // "كل عام وأنتم بخير"
   const kolCY = S*0.535;
-  // نجمتان ذهبيتان
   ctx.fillStyle='#FFB900'; ctx.font='700 28px serif'; ctx.textAlign='center';
   ctx.fillText('✦', S/2-230, kolCY+7);
   ctx.fillText('✦', S/2+230, kolCY+7);
 
-  const kolImg = await arabicTextToImage('كل عام وأنتم بخير', {
+  drawArabicText(ctx, 'كل عام وأنتم بخير', S/2, kolCY, {
     fontSize: Math.round(S*0.043),
     color: 'rgba(255,255,255,0.95)',
-    fontWeight: '700',
-    width: S*0.70,
-    height: Math.round(S*0.072)
+    fontWeight: '700'
   });
-  if(kolImg){
-    ctx.drawImage(kolImg, S/2 - (S*0.70)/2, kolCY - Math.round(S*0.055), S*0.70, Math.round(S*0.072));
-  }
 
-  // ── بادج (61%→80%) ──
+  // بادج
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
-  const bdgCY=S*0.705, bdgW=S*0.42, bdgH=role?S*0.135:S*0.092;
+  const bdgCY=S*0.715, bdgW=S*0.42, bdgH=role?S*0.135:S*0.092;
   const bdgX=(S-bdgW)/2, bdgY=bdgCY-bdgH/2;
 
   ctx.save();
@@ -311,35 +308,22 @@ async function drawClubCard() {
   ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2;
   roundRect(ctx,bdgX,bdgY,bdgW,bdgH,18); ctx.stroke();
 
-  // الاسم عبر SVG
-  const nameFontSize = role ? Math.round(S*0.038) : Math.round(S*0.044);
-  const nameImg = await arabicTextToImage(name, {
-    fontSize: nameFontSize,
+  // اسم
+  drawArabicText(ctx, name, S/2, role ? bdgY+bdgH*0.35 : bdgY+bdgH*0.50, {
+    fontSize: role ? Math.round(S*0.038) : Math.round(S*0.044),
     color: '#ffffff',
-    fontFamily: 'Amiri, Cairo, Tajawal, sans-serif',
-    width: bdgW,
-    height: Math.round(nameFontSize*1.6)
+    fontFamily: '"Amiri", "Cairo", sans-serif'
   });
-  if(nameImg){
-    const nameY = role ? bdgY+bdgH*0.08 : bdgY+bdgH*0.18;
-    ctx.drawImage(nameImg, bdgX, nameY, bdgW, Math.round(nameFontSize*1.6));
-  }
 
-  // المنصب عبر SVG
+  // منصب
   if(role){
-    const roleFontSize = Math.round(S*0.026);
-    const roleImg = await arabicTextToImage(role, {
-      fontSize: roleFontSize,
-      color: '#50E6FF',
-      width: bdgW,
-      height: Math.round(roleFontSize*1.6)
+    drawArabicText(ctx, role, S/2, bdgY+bdgH*0.75, {
+      fontSize: Math.round(S*0.026),
+      color: '#50E6FF'
     });
-    if(roleImg){
-      ctx.drawImage(roleImg, bdgX, bdgY+bdgH*0.52, bdgW, Math.round(roleFontSize*1.6));
-    }
   }
 
-  // ── فوتر (88%→100%) ──
+  // فوتر
   const ftTop=S*0.88;
   const ftGrad=ctx.createLinearGradient(0,ftTop,0,S);
   ftGrad.addColorStop(0,'rgba(0,0,0,0)'); ftGrad.addColorStop(1,'rgba(0,0,0,0.3)');
@@ -352,16 +336,19 @@ async function drawClubCard() {
     ctx.restore();
   }
 
-  // فوتر: "عيد مبارك · MLSA 2026 ·" — نص مختلط نرسمه بـ SVG
-  const ftImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
+  // فوتر نص: MLSA 2026 إنجليزي + عيد مبارك عربي
+  ctx.save();
+  ctx.textAlign='center'; ctx.direction='ltr';
+  ctx.fillStyle='rgba(255,255,255,0.65)';
+  ctx.font=`600 ${Math.round(S*0.018)}px Cairo,Tajawal,sans-serif`;
+  ctx.fillText('· MLSA 2026 ·', S/2+60, ftCY+5);
+  ctx.restore();
+
+  drawArabicText(ctx, 'عيد مبارك', S/2-80, ftCY, {
     fontSize: Math.round(S*0.018),
     color: 'rgba(255,255,255,0.65)',
-    width: 700,
-    height: Math.round(S*0.032)
+    fontWeight: '600'
   });
-  if(ftImg){
-    ctx.drawImage(ftImg, S/2-350+14, ftCY-Math.round(S*0.025), 700, Math.round(S*0.032));
-  }
 
   return canvas;
 }
@@ -399,14 +386,12 @@ async function drawGeneralCard() {
   ctx.strokeStyle='rgba(255,255,255,0.28)'; ctx.lineWidth=2.5;
   roundRect(ctx,bX,bY,bW,bH,40); ctx.stroke();
 
-  // الاسم عبر SVG
-  const nameImg = await arabicTextToImage(name, {
-    fontSize: 54, color: '#ffffff',
-    fontFamily: 'Cairo, Tajawal, sans-serif',
-    fontWeight: '900',
-    width: bW, height: bH
+  drawArabicText(ctx, name, W/2, bY+bH*0.52, {
+    fontSize: 54,
+    color: '#ffffff',
+    fontFamily: '"Cairo", "Tajawal", sans-serif',
+    fontWeight: '900'
   });
-  if(nameImg){ ctx.drawImage(nameImg, bX, bY, bW, bH); }
 
   return canvas;
 }
