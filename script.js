@@ -1,5 +1,5 @@
 // =============================================
-//  MLSAC Eid Generator — script.js (v2)
+//  MLSAC Eid Generator — script.js (fixed)
 // =============================================
 
 let majorTemplate = 0; // 1=club, 2=general
@@ -9,11 +9,9 @@ let majorTemplate = 0; // 1=club, 2=general
 function chooseMajor(n) {
   majorTemplate = n;
 
-  // Animate the option selection
   document.getElementById('mainOpt1').classList.toggle('active', n === 1);
   document.getElementById('mainOpt2').classList.toggle('active', n === 2);
 
-  // Brief delay for visual feedback then transition
   setTimeout(() => {
     document.getElementById('step1').classList.add('hidden');
 
@@ -44,7 +42,6 @@ function goBackFromResult() {
   document.getElementById('mainOpt1').classList.remove('active');
   document.getElementById('mainOpt2').classList.remove('active');
 
-  // Clear inputs
   ['nameA', 'roleA', 'nameB'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -68,14 +65,13 @@ function requireName(inputId) {
   if (!val) {
     el.focus();
     el.style.borderColor = '#F25022';
-    el.style.boxShadow   = '0 0 0 3px rgba(242,80,34,.2)';
-    el.style.animation   = 'shake .35s ease both';
+    el.style.boxShadow = '0 0 0 3px rgba(242,80,34,.2)';
+    el.style.animation = 'shake .35s ease both';
 
-    // Shake animation via class
     el.classList.add('input-error');
     setTimeout(() => {
       el.style.borderColor = '';
-      el.style.boxShadow   = '';
+      el.style.boxShadow = '';
       el.classList.remove('input-error');
     }, 1400);
     return null;
@@ -144,6 +140,7 @@ function buildFestiveDecor(containerId, colorA, colorB) {
 
 function generateClub() {
   document.getElementById('happyEidImg').src = 'image/happyeid.png';
+
   const name = requireName('nameA');
   if (!name) return;
 
@@ -191,6 +188,143 @@ function showResult(visibleId) {
   }, 150);
 }
 
+// ── Arabic text helpers ───────────────────────
+
+function isArabicText(text) {
+  return /[\u0600-\u06FF]/.test(text || '');
+}
+
+function createTextImage(text, options = {}) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  const fontSize = options.fontSize || 32;
+  const fontWeight = options.fontWeight || '700';
+  const fontFamily = options.fontFamily || 'Cairo, Tajawal, sans-serif';
+  const color = options.color || '#ffffff';
+  const paddingX = options.paddingX || 16;
+  const paddingY = options.paddingY || 12;
+
+  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  const metrics = ctx.measureText(text);
+  const textWidth = Math.ceil(metrics.width);
+
+  canvas.width = textWidth + paddingX * 2;
+  canvas.height = Math.ceil(fontSize * 2.2) + paddingY * 2;
+
+  const ctx2 = canvas.getContext('2d');
+  ctx2.clearRect(0, 0, canvas.width, canvas.height);
+  ctx2.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  ctx2.fillStyle = color;
+  ctx2.textAlign = 'center';
+  ctx2.textBaseline = 'middle';
+  ctx2.direction = 'rtl';
+
+  ctx2.save();
+  ctx2.translate(canvas.width / 2, canvas.height / 2);
+  ctx2.fillText(text, 0, 0);
+  ctx2.restore();
+
+  return canvas.toDataURL('image/png');
+}
+
+// استبدلي الدالة كاملة بهذه النسخة
+// هذه تضبط العربي + تقلل المسافة بين "ضحى" و "علي" وقت التحميل
+
+// استبدلي دالة replaceArabicElementsWithImages بهذه النسخة
+
+function replaceArabicElementsWithImages(clonedDoc) {
+  const config = [
+    {
+      selector: '.club-ar-name',
+      scale: 1.6,
+      heightScale: 1.25,
+      paddingX: 18,
+      paddingY: 4,
+      marginTop: 0
+    },
+    {
+      selector: '.club-kol',
+      scale: 1.5,
+      heightScale: 1.2,
+      paddingX: 16,
+      paddingY: 4,
+      marginTop: 0
+    },
+    {
+      selector: '.b-name',
+      scale: 2.2,
+      heightScale: 1.15,
+      paddingX: 16,
+      paddingY: 2,
+      marginTop: 0
+    },
+    {
+      selector: '.b-role',
+      scale: 1.85,
+      heightScale: 1.1,
+      paddingX: 12,
+      paddingY: 4,
+      marginTop: -20 
+    },
+    {
+      selector: '.footer-copy, .footer-txt, .footer-txt-ar',
+      scale: 1.8,
+      heightScale: 1.2,
+      paddingX: 20,
+      paddingY: 4,
+      marginTop: 0
+    }
+  ];
+
+  config.forEach(item => {
+    const originalElements = document.querySelectorAll(item.selector);
+    const clonedElements = clonedDoc.querySelectorAll(item.selector);
+
+    clonedElements.forEach((el, index) => {
+      const text = (el.textContent || '').trim();
+      if (!text || !isArabicText(text)) return;
+
+      const originalEl = originalElements[index] || originalElements[0] || el;
+      const style = window.getComputedStyle(originalEl);
+
+      const baseFontSize = parseFloat(style.fontSize) || 24;
+      const fontSize = Math.round(baseFontSize * item.scale);
+      const fontWeight = style.fontWeight || '700';
+      const color = style.color || '#ffffff';
+      const fontFamily = style.fontFamily || 'Cairo, Tajawal, sans-serif';
+
+      const img = clonedDoc.createElement('img');
+      img.src = createTextImage(text, {
+        fontSize,
+        fontWeight,
+        color,
+        fontFamily,
+        paddingX: item.paddingX,
+        paddingY: item.paddingY
+      });
+
+      img.style.display = 'block';
+      img.style.width = 'auto';
+      img.style.maxWidth = '100%';
+      img.style.height = `${Math.ceil(fontSize * item.heightScale)}px`;
+      img.style.margin = '0 auto';
+      img.style.marginTop = `${item.marginTop || 0}px`;
+
+      el.innerHTML = '';
+      el.style.direction = 'ltr';
+      el.style.unicodeBidi = 'normal';
+      el.style.margin = '0';
+      el.style.padding = '0';
+      el.style.lineHeight = '1';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.appendChild(img);
+    });
+  });
+}
+
 // ── Download ──────────────────────────────────
 
 function downloadCard() {
@@ -206,44 +340,99 @@ function downloadCard() {
   btn.disabled = true;
 
   html2canvas(card, {
-    scale: 3,
+    scale: 4,
     useCORS: true,
     allowTaint: true,
     backgroundColor: null,
     logging: false,
-    imageTimeout: 12000,
+    imageTimeout: 15000,
+    foreignObjectRendering: false,
 
     onclone: (doc) => {
-  doc.documentElement.setAttribute('lang', 'ar');
-  doc.documentElement.setAttribute('dir', 'rtl');
-  doc.body.setAttribute('dir', 'rtl');
+      doc.documentElement.setAttribute('lang', 'ar');
+      doc.documentElement.setAttribute('dir', 'rtl');
+      doc.body.setAttribute('dir', 'rtl');
 
-  doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar').forEach(el => {
-    el.style.direction   = 'rtl';
-    el.style.unicodeBidi = 'embed';
-    el.style.fontFamily  = 'Tajawal, Cairo, sans-serif';
-    el.style.textAlign   = 'right';
-  });
-}
+      doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar, .footer-copy').forEach(el => {
+        el.style.direction = 'rtl';
+        el.style.unicodeBidi = 'plaintext';
+        el.style.fontFamily = 'Tajawal, Cairo, sans-serif';
+        el.style.textAlign = 'center';
+        el.style.lineHeight = '1';
+        el.style.margin = '0';
+        el.style.padding = '0';
+      });
 
-  }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'mlsac-eid-1447.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+      // وداخل downloadCard > onclone
+      // استبدلي جزء .b-name و .b-role و .b-info و .club-badge بهذا فقط
 
-    btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
-    setTimeout(() => {
+      const badge = doc.querySelector('.club-badge');
+      if (badge) {
+        badge.style.display = 'flex';
+        badge.style.flexDirection = 'column';
+        badge.style.alignItems = 'center';
+        badge.style.justifyContent = 'center';
+        badge.style.gap = '0';
+        badge.style.padding = '8px 20px 6px 20px';
+      }
+
+      const info = doc.querySelector('.b-info');
+      if (info) {
+        info.style.display = 'flex';
+        info.style.flexDirection = 'column';
+        info.style.alignItems = 'center';
+        info.style.justifyContent = 'center';
+        info.style.gap = '0';
+        info.style.lineHeight = '1';
+        info.style.margin = '0';
+        info.style.padding = '0';
+      }
+
+      // وداخل downloadCard > onclone
+      // استبدلي فقط جزء .b-name و .b-role بهذا
+
+      const name = doc.querySelector('.b-name');
+      if (name) {
+        name.style.display = 'flex';
+        name.style.alignItems = 'center';
+        name.style.justifyContent = 'center';
+        name.style.lineHeight = '1';
+        name.style.margin = '0';
+        name.style.padding = '0';
+      }
+
+      const role = doc.querySelector('.b-role');
+      if (role) {
+        role.style.display = role.textContent.trim() ? 'flex' : 'none';
+        role.style.alignItems = 'center';
+        role.style.justifyContent = 'center';
+        role.style.lineHeight = '1';
+        role.style.margin = '0';
+        role.style.marginTop = '-28px';
+        role.style.padding = '0';
+      }
+
+      replaceArabicElementsWithImages(doc);
+    }
+  })
+    .then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'mlsac-eid-1447.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
+      setTimeout(() => {
+        btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
+        btn.disabled = false;
+      }, 2200);
+    })
+    .catch(err => {
+      console.error(err);
+      alert('حدث خطأ أثناء التحميل، حاولي مجددًا');
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
       btn.disabled = false;
-    }, 2200);
-
-  }).catch(err => {
-    console.error(err);
-    alert('حدث خطأ أثناء التحميل، حاولي مجدداً');
-    btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-    btn.disabled = false;
-  });
+    });
 }
 
 // ── Floating background shapes ────────────────
@@ -272,7 +461,10 @@ function createFloatingShapes() {
       animation-delay: ${Math.random() * 12}s;
     `;
 
-    if (useEmoji) el.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+    if (useEmoji) {
+      el.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+    }
+
     container.appendChild(el);
   }
 }
@@ -364,6 +556,7 @@ shakeStyle.textContent = `
     animation: shake .35s ease both !important;
   }
 `;
+
 document.head.appendChild(shakeStyle);
 
 // ── Init ─────────────────────────────────────
