@@ -29,13 +29,11 @@ function goBack() {
 
 function goBackFromResult() {
   document.getElementById('resultSection').classList.add('hidden');
-  ['clubCard', 'genCard1'].forEach(id =>
-    document.getElementById(id).classList.add('hidden')
-  );
+  ['clubCard','genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
   document.getElementById('step1').classList.remove('hidden');
   document.getElementById('mainOpt1').classList.remove('active');
   document.getElementById('mainOpt2').classList.remove('active');
-  ['nameA', 'roleA', 'nameB'].forEach(id => {
+  ['nameA','roleA','nameB'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -64,44 +62,30 @@ function requireName(inputId) {
   return val;
 }
 
-const STAR_POSITIONS = [
-  [8,12],[15,55],[88,10],[82,60],[50,6],[50,94],[22,30],[75,30],
-];
+const STAR_POSITIONS = [[8,12],[15,55],[88,10],[82,60],[50,6],[50,94],[22,30],[75,30]];
 
 function buildClubStars() {
   const container = document.getElementById('clubStars');
   if (!container) return;
   container.innerHTML = '';
-  STAR_POSITIONS.forEach(([x, y], i) => {
+  STAR_POSITIONS.forEach(([x,y],i) => {
     const star = document.createElement('div');
-    star.style.cssText = `
-      position:absolute; left:${x}%; top:${y}%;
-      color:rgba(255,255,255,${0.3+Math.random()*0.5});
-      font-size:${Math.random()*10+8}px;
-      animation:popTwinkle ${2+Math.random()*2}s ${i*0.2}s infinite;
-      pointer-events:none;`;
-    star.textContent = Math.random() > 0.5 ? '✦' : '✧';
+    star.style.cssText = `position:absolute;left:${x}%;top:${y}%;color:rgba(255,255,255,${0.3+Math.random()*0.5});font-size:${Math.random()*10+8}px;animation:popTwinkle ${2+Math.random()*2}s ${i*0.2}s infinite;pointer-events:none;`;
+    star.textContent = Math.random()>0.5 ? '✦' : '✧';
     container.appendChild(star);
   });
 }
 
-const FESTIVE_POS = [
-  [8,10],[14,16],[86,10],[80,18],[11,82],[86,76],
-  [50,8],[50,92],[30,25],[70,75],[20,60],[80,40],
-];
+const FESTIVE_POS = [[8,10],[14,16],[86,10],[80,18],[11,82],[86,76],[50,8],[50,92],[30,25],[70,75],[20,60],[80,40]];
 
 function buildFestiveDecor(containerId, colorA, colorB) {
   const c = document.getElementById(containerId);
   if (!c) return;
   c.innerHTML = '';
-  FESTIVE_POS.forEach(([x, y], i) => {
+  FESTIVE_POS.forEach(([x,y],i) => {
     const el = document.createElement('div');
     el.className = 'c-confetti';
-    el.style.cssText = `
-      left:${x}%; top:${y}%;
-      width:${Math.random()*8+5}px; height:${Math.random()*8+5}px;
-      background:${Math.random()>.5?colorA:colorB};
-      animation-delay:${i*.16}s; animation-duration:${2+Math.random()*2}s;`;
+    el.style.cssText = `left:${x}%;top:${y}%;width:${Math.random()*8+5}px;height:${Math.random()*8+5}px;background:${Math.random()>.5?colorA:colorB};animation-delay:${i*.16}s;animation-duration:${2+Math.random()*2}s;`;
     c.appendChild(el);
   });
 }
@@ -124,17 +108,13 @@ function generateGeneral() {
   const name = requireName('nameB');
   if (!name) return;
   document.getElementById('outName2').textContent = name;
-  buildFestiveDecor('gen1Decor', '#ffffff', 'rgba(80,230,255,.9)');
+  buildFestiveDecor('gen1Decor','#ffffff','rgba(80,230,255,.9)');
   showResult('genCard1');
 }
 
 function showResult(visibleId) {
-  ['step1','step2A','step2B'].forEach(id =>
-    document.getElementById(id).classList.add('hidden')
-  );
-  ['clubCard','genCard1'].forEach(id =>
-    document.getElementById(id).classList.add('hidden')
-  );
+  ['step1','step2A','step2B'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['clubCard','genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
   document.getElementById(visibleId).classList.remove('hidden');
   const section = document.getElementById('resultSection');
   section.classList.remove('hidden');
@@ -153,7 +133,6 @@ async function downloadCard() {
   btn.innerHTML = 'جاري التحميل...';
   btn.disabled  = true;
 
-  // انتظر تحميل الخطوط
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
   await new Promise(r => setTimeout(r, 500));
 
@@ -167,108 +146,67 @@ async function downloadCard() {
       imageTimeout: 15000,
       foreignObjectRendering: false,
 
-      onclone: (doc, el) => {
+      onclone: (doc) => {
 
         // ── أوقف كل الأنيميشن ──
-        const stopAnim = document.createElement('style');
-        stopAnim.textContent = `
-          *, *::before, *::after {
-            animation: none !important;
-            transition: none !important;
-          }
-        `;
+        const stopAnim = doc.createElement('style');
+        stopAnim.textContent = `*, *::before, *::after { animation: none !important; transition: none !important; }`;
         doc.head.appendChild(stopAnim);
 
-        // ── اجبر الخطوط ──
-        const fontFix = document.createElement('style');
-        fontFix.textContent = `
-          * { font-family: "Cairo", "Tajawal", sans-serif !important; }
-          .b-name { font-family: "Amiri", "Cairo", serif !important; }
+        // ── CSS يصلح العربي المعكوس ──
+        const arabicFix = doc.createElement('style');
+        arabicFix.textContent = `
+          .b-name, .b-role, .gen1-name, .club-kol,
+          .club-ar-name, .footer-txt-ar, .footer-copy {
+            direction: rtl !important;
+            unicode-bidi: bidi-override !important;
+            text-align: center !important;
+            font-family: "Cairo", "Tajawal", sans-serif !important;
+          }
+          .b-name {
+            font-family: "Amiri", "Cairo", serif !important;
+          }
         `;
-        doc.head.appendChild(fontFix);
+        doc.head.appendChild(arabicFix);
 
-        // ── اجبر اتجاه RTL ──
-        doc.documentElement.dir = 'rtl';
-        doc.documentElement.lang = 'ar';
+        // ── اجبر اتجاه RTL على الصفحة كلها ──
+        doc.documentElement.setAttribute('dir', 'rtl');
+        doc.documentElement.setAttribute('lang', 'ar');
+        doc.body.setAttribute('dir', 'rtl');
 
-        // ── اجبر ظهور كل العناصر النصية ──
-        const textEls = doc.querySelectorAll(
-          '.b-name, .b-role, .gen1-name, .club-kol, ' +
-          '.club-en-name, .club-ar-name, ' +
-          '.footer-txt, .footer-txt-ar, .footer-copy, ' +
-          '.club-top-text, .site-title'
-        );
-        textEls.forEach(el => {
-          el.style.opacity                = '1';
-          el.style.visibility             = 'visible';
-          el.style.color                  = window.getComputedStyle(
-            document.querySelector('.' + el.className.trim().split(/\s+/)[0]) || el
-          ).color || '#ffffff';
-          el.style.webkitTextFillColor    = el.style.color;
-          el.style.direction              = 'rtl';
-          el.style.unicodeBidi            = 'plaintext';
-          el.style.textAlign              = 'center';
+        // ── اجبر ظهور النصوص ──
+        doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar, .footer-copy').forEach(el => {
+          el.style.opacity         = '1';
+          el.style.visibility      = 'visible';
+          el.style.webkitTextFillColor = el.style.color || '';
         });
 
         // ── البادج ──
         const badge = doc.querySelector('.club-badge');
-        if (badge) {
-          badge.style.opacity    = '1';
-          badge.style.visibility = 'visible';
-          badge.style.display    = 'flex';
-        }
+        if (badge) { badge.style.opacity='1'; badge.style.visibility='visible'; badge.style.display='flex'; }
 
         // ── b-info ──
         const info = doc.querySelector('.b-info');
-        if (info) {
-          info.style.display    = 'flex';
-          info.style.flexDirection = 'column';
-          info.style.alignItems = 'center';
-          info.style.gap        = '2px';
-          info.style.opacity    = '1';
-          info.style.visibility = 'visible';
-        }
+        if (info) { info.style.display='flex'; info.style.flexDirection='column'; info.style.alignItems='center'; info.style.gap='2px'; info.style.opacity='1'; info.style.visibility='visible'; }
 
         // ── الاسم ──
         const name = doc.querySelector('.b-name');
-        if (name) {
-          name.style.display              = 'block';
-          name.style.opacity              = '1';
-          name.style.visibility           = 'visible';
-          name.style.color                = '#ffffff';
-          name.style.webkitTextFillColor  = '#ffffff';
-        }
+        if (name) { name.style.display='block'; name.style.opacity='1'; name.style.visibility='visible'; name.style.color='#ffffff'; name.style.webkitTextFillColor='#ffffff'; name.style.direction='rtl'; name.style.unicodeBidi='bidi-override'; }
 
         // ── المنصب ──
         const role = doc.querySelector('.b-role');
         if (role) {
           const hasRole = role.textContent.trim().length > 0;
-          role.style.display              = hasRole ? 'block' : 'none';
-          role.style.opacity              = '1';
-          role.style.visibility           = hasRole ? 'visible' : 'hidden';
-          role.style.color                = '#50E6FF';
-          role.style.webkitTextFillColor  = '#50E6FF';
+          role.style.display=hasRole?'block':'none'; role.style.opacity='1'; role.style.visibility=hasRole?'visible':'hidden'; role.style.color='#50E6FF'; role.style.webkitTextFillColor='#50E6FF'; role.style.direction='rtl'; role.style.unicodeBidi='bidi-override';
         }
 
         // ── كل عام وأنتم بخير ──
         const kol = doc.querySelector('.club-kol');
-        if (kol) {
-          kol.style.display             = 'block';
-          kol.style.opacity             = '1';
-          kol.style.visibility          = 'visible';
-          kol.style.color               = 'rgba(255,255,255,0.95)';
-          kol.style.webkitTextFillColor = 'rgba(255,255,255,0.95)';
-        }
+        if (kol) { kol.style.display='block'; kol.style.opacity='1'; kol.style.visibility='visible'; kol.style.color='rgba(255,255,255,0.95)'; kol.style.webkitTextFillColor='rgba(255,255,255,0.95)'; kol.style.direction='rtl'; kol.style.unicodeBidi='bidi-override'; }
 
         // ── اسم البطاقة العامة ──
         const gen1name = doc.querySelector('.gen1-name');
-        if (gen1name) {
-          gen1name.style.display             = 'block';
-          gen1name.style.opacity             = '1';
-          gen1name.style.visibility          = 'visible';
-          gen1name.style.color               = '#ffffff';
-          gen1name.style.webkitTextFillColor = '#ffffff';
-        }
+        if (gen1name) { gen1name.style.display='block'; gen1name.style.opacity='1'; gen1name.style.visibility='visible'; gen1name.style.color='#ffffff'; gen1name.style.webkitTextFillColor='#ffffff'; gen1name.style.direction='rtl'; gen1name.style.unicodeBidi='bidi-override'; }
       }
     });
 
@@ -302,15 +240,7 @@ function createFloatingShapes() {
     el.className = 'float-shape';
     const size = Math.random()*12+4;
     const useEmoji = Math.random()>0.5;
-    el.style.cssText = `
-      left:${Math.random()*100}%; bottom:-60px;
-      width:${size}px; height:${size}px;
-      ${useEmoji
-        ? `color:${colors[Math.floor(Math.random()*colors.length)]};font-size:${size}px;`
-        : `background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'3px'};transform:rotate(45deg);`
-      }
-      animation-duration:${Math.random()*12+8}s;
-      animation-delay:${Math.random()*12}s;`;
+    el.style.cssText = `left:${Math.random()*100}%;bottom:-60px;width:${size}px;height:${size}px;${useEmoji?`color:${colors[Math.floor(Math.random()*colors.length)]};font-size:${size}px;`:`background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'3px'};transform:rotate(45deg);`}animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*12}s;`;
     if (useEmoji) el.textContent = shapes[Math.floor(Math.random()*shapes.length)];
     container.appendChild(el);
   }
@@ -323,22 +253,19 @@ function initParticleCanvas() {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let W = window.innerWidth, H = window.innerHeight;
-  canvas.width = W; canvas.height = H;
+  canvas.width=W; canvas.height=H;
   window.addEventListener('resize', () => {
-    W = window.innerWidth; H = window.innerHeight;
-    canvas.width = W; canvas.height = H;
+    W=window.innerWidth; H=window.innerHeight;
+    canvas.width=W; canvas.height=H;
   });
   const particles = [];
-  for (let i = 0; i < 30; i++) {
-    particles.push({
-      x:Math.random()*W, y:Math.random()*H,
-      r:Math.random()*1.5+0.5,
-      speedX:(Math.random()-0.5)*0.3,
-      speedY:(Math.random()-0.5)*0.3,
-      alpha:Math.random()*0.5+0.1,
-      color:Math.random()>0.5?'#50E6FF':'#FFB900',
-    });
-  }
+  for (let i=0;i<30;i++) particles.push({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*1.5+0.5,
+    speedX:(Math.random()-0.5)*0.3, speedY:(Math.random()-0.5)*0.3,
+    alpha:Math.random()*0.5+0.1,
+    color:Math.random()>0.5?'#50E6FF':'#FFB900'
+  });
   function draw() {
     ctx.clearRect(0,0,W,H);
     particles.forEach(p => {
@@ -367,10 +294,10 @@ document.addEventListener('keypress', (e) => {
 const shakeStyle = document.createElement('style');
 shakeStyle.textContent = `
   @keyframes shake {
-    0%,100%{transform:translateX(0)}
-    15%{transform:translateX(-8px)} 30%{transform:translateX(8px)}
-    45%{transform:translateX(-6px)} 60%{transform:translateX(6px)}
-    75%{transform:translateX(-3px)} 90%{transform:translateX(3px)}
+    0%,100%{transform:translateX(0)} 15%{transform:translateX(-8px)}
+    30%{transform:translateX(8px)} 45%{transform:translateX(-6px)}
+    60%{transform:translateX(6px)} 75%{transform:translateX(-3px)}
+    90%{transform:translateX(3px)}
   }
   .input-error { animation: shake .35s ease both !important; }
 `;
