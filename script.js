@@ -121,98 +121,321 @@ function showResult(visibleId) {
   setTimeout(() => section.scrollIntoView({ behavior:'smooth', block:'start' }), 150);
 }
 
-// ── Download ──────────────────────────────────
+// ══════════════════════════════════════════════
+//  helpers
+// ══════════════════════════════════════════════
+
+function loadImage(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+// رسم نص عربي عبر SVG foreignObject ← يحل مشكلة الانعكاس 100%
+function arabicTextToImage(text, opts = {}) {
+  const fontSize   = opts.fontSize   || 48;
+  const color      = opts.color      || '#ffffff';
+  const fontFamily = opts.fontFamily || 'Cairo, Tajawal, sans-serif';
+  const fontWeight = opts.fontWeight || '700';
+  const canvasW    = opts.width      || 900;
+  const canvasH    = opts.height     || Math.ceil(fontSize * 1.8);
+
+  // نبني SVG يحتوي foreignObject بـ HTML عربي صح
+  const html = `<div xmlns="http://www.w3.org/1999/xhtml"
+    style="width:${canvasW}px;height:${canvasH}px;
+           display:flex;align-items:center;justify-content:center;
+           direction:rtl;unicode-bidi:embed;
+           font-family:${fontFamily};font-size:${fontSize}px;
+           font-weight:${fontWeight};color:${color};
+           white-space:nowrap;overflow:visible;"
+  >${text}</div>`;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg"
+    width="${canvasW}" height="${canvasH}">
+    <foreignObject width="${canvasW}" height="${canvasH}">
+      ${html}
+    </foreignObject>
+  </svg>`;
+
+  const blob = new Blob([svg], {type:'image/svg+xml;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+
+// ══════════════════════════════════════════════
+//  رسم Club Card
+// ══════════════════════════════════════════════
+
+async function drawClubCard() {
+  const S = 1200;
+  const canvas = document.createElement('canvas');
+  canvas.width = S; canvas.height = S;
+  const ctx = canvas.getContext('2d');
+
+  // ── خلفية ──
+  const bg = ctx.createLinearGradient(0,0,S*0.6,S);
+  bg.addColorStop(0,'#041530'); bg.addColorStop(0.35,'#0a2568');
+  bg.addColorStop(0.70,'#0d5bc9'); bg.addColorStop(1,'#1a78e8');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,S,S);
+
+  const r1=ctx.createRadialGradient(S*0.3,0,0,S*0.3,0,S*0.55);
+  r1.addColorStop(0,'rgba(80,230,255,0.13)'); r1.addColorStop(1,'transparent');
+  ctx.fillStyle=r1; ctx.fillRect(0,0,S,S);
+
+  const r2=ctx.createRadialGradient(S*0.7,S,0,S*0.7,S,S*0.55);
+  r2.addColorStop(0,'rgba(0,120,212,0.2)'); r2.addColorStop(1,'transparent');
+  ctx.fillStyle=r2; ctx.fillRect(0,0,S,S);
+
+  // شبكة
+  ctx.strokeStyle='rgba(255,255,255,0.022)'; ctx.lineWidth=1;
+  for(let x=0;x<S;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,S);ctx.stroke();}
+  for(let y=0;y<S;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(S,y);ctx.stroke();}
+
+  // نجوم
+  [[0.08,0.14],[0.88,0.12],[0.15,0.58],[0.82,0.62],[0.50,0.08],
+   [0.22,0.32],[0.75,0.32],[0.35,0.78],[0.65,0.22],[0.12,0.48],
+   [0.90,0.82],[0.50,0.92]].forEach(([xr,yr])=>{
+    ctx.fillStyle=`rgba(255,255,255,${(0.2+Math.random()*0.35).toFixed(2)})`;
+    ctx.font=`${Math.round(Math.random()*12+7)}px serif`;
+    ctx.textAlign='center';
+    ctx.fillText(Math.random()>0.5?'✦':'✧',xr*S,yr*S);
+  });
+
+  // ── هيدر 0%→13% ──
+  const hdrH = S*0.13;
+  const hdrGrad=ctx.createLinearGradient(0,0,0,hdrH*1.5);
+  hdrGrad.addColorStop(0,'rgba(0,8,30,0.92)'); hdrGrad.addColorStop(1,'rgba(0,8,30,0)');
+  ctx.fillStyle=hdrGrad; ctx.fillRect(0,0,S,hdrH*1.5);
+  ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,hdrH); ctx.lineTo(S,hdrH); ctx.stroke();
+
+  // لوغو في الهيدر
+  const logoImg = await loadImage('image/logo.png');
+  const logoSize = Math.round(hdrH*0.60);
+  const logoCX = S/2 + 20;
+  const logoY  = (hdrH-logoSize)/2;
+  if(logoImg){
+    ctx.save(); ctx.shadowColor='rgba(80,230,255,0.3)'; ctx.shadowBlur=16;
+    ctx.drawImage(logoImg, logoCX, logoY, logoSize, logoSize);
+    ctx.restore();
+  }
+
+  // "Microsoft LSAC Club" — إنجليزي فقط = ctx.fillText عادي
+  const txtX = logoCX - 12;
+  ctx.save();
+  ctx.textAlign='right'; ctx.direction='ltr';
+  ctx.fillStyle='#ffffff';
+  ctx.font=`800 ${Math.round(hdrH*0.21)}px Cairo,Tajawal,sans-serif`;
+  ctx.fillText('Microsoft LSAC Club', txtX, hdrH*0.38);
+  ctx.restore();
+
+  // "نادي مايكروسوفت" — عربي عبر SVG
+  const arNameImg = await arabicTextToImage('نادي مايكروسوفت', {
+    fontSize: Math.round(hdrH*0.19),
+    color: '#50E6FF',
+    width: 500,
+    height: Math.round(hdrH*0.35)
+  });
+  if(arNameImg){
+    // نرسمها يمين النص الإنجليزي
+    ctx.drawImage(arNameImg, txtX - 500, hdrH*0.54, 500, Math.round(hdrH*0.35));
+  }
+
+  // ── صورة happyeid (13%→48%) ──
+  const eidTop=S*0.13, eidBot=S*0.48;
+  const eidImg=await loadImage('image/happyeid.png');
+  if(eidImg){
+    const maxW=S*0.72, maxH=eidBot-eidTop-10;
+    const natR=eidImg.width/eidImg.height;
+    let dW=maxW, dH=maxW/natR;
+    if(dH>maxH){dH=maxH; dW=maxH*natR;}
+    const dX=(S-dW)/2, dY=eidTop+(maxH-dH)/2+5;
+    ctx.save(); ctx.shadowColor='rgba(0,0,0,0.28)'; ctx.shadowBlur=20;
+    ctx.drawImage(eidImg,dX,dY,dW,dH);
+    ctx.restore();
+  }
+
+  // ── "كل عام وأنتم بخير" (49%→59%) عبر SVG ──
+  const kolCY = S*0.535;
+  // نجمتان ذهبيتان
+  ctx.fillStyle='#FFB900'; ctx.font='700 28px serif'; ctx.textAlign='center';
+  ctx.fillText('✦', S/2-230, kolCY+7);
+  ctx.fillText('✦', S/2+230, kolCY+7);
+
+  const kolImg = await arabicTextToImage('كل عام وأنتم بخير', {
+    fontSize: Math.round(S*0.043),
+    color: 'rgba(255,255,255,0.95)',
+    fontWeight: '700',
+    width: S*0.70,
+    height: Math.round(S*0.072)
+  });
+  if(kolImg){
+    ctx.drawImage(kolImg, S/2 - (S*0.70)/2, kolCY - Math.round(S*0.055), S*0.70, Math.round(S*0.072));
+  }
+
+  // ── بادج (61%→80%) ──
+  const name = document.getElementById('outName1').textContent.trim();
+  const role = document.getElementById('outRole1').textContent.trim();
+
+  const bdgCY=S*0.705, bdgW=S*0.42, bdgH=role?S*0.135:S*0.092;
+  const bdgX=(S-bdgW)/2, bdgY=bdgCY-bdgH/2;
+
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.25)'; ctx.shadowBlur=24; ctx.shadowOffsetY=7;
+  ctx.fillStyle='rgba(255,255,255,0.22)';
+  roundRect(ctx,bdgX,bdgY,bdgW,bdgH,18); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2;
+  roundRect(ctx,bdgX,bdgY,bdgW,bdgH,18); ctx.stroke();
+
+  // الاسم عبر SVG
+  const nameFontSize = role ? Math.round(S*0.038) : Math.round(S*0.044);
+  const nameImg = await arabicTextToImage(name, {
+    fontSize: nameFontSize,
+    color: '#ffffff',
+    fontFamily: 'Amiri, Cairo, Tajawal, sans-serif',
+    width: bdgW,
+    height: Math.round(nameFontSize*1.6)
+  });
+  if(nameImg){
+    const nameY = role ? bdgY+bdgH*0.08 : bdgY+bdgH*0.18;
+    ctx.drawImage(nameImg, bdgX, nameY, bdgW, Math.round(nameFontSize*1.6));
+  }
+
+  // المنصب عبر SVG
+  if(role){
+    const roleFontSize = Math.round(S*0.026);
+    const roleImg = await arabicTextToImage(role, {
+      fontSize: roleFontSize,
+      color: '#50E6FF',
+      width: bdgW,
+      height: Math.round(roleFontSize*1.6)
+    });
+    if(roleImg){
+      ctx.drawImage(roleImg, bdgX, bdgY+bdgH*0.52, bdgW, Math.round(roleFontSize*1.6));
+    }
+  }
+
+  // ── فوتر (88%→100%) ──
+  const ftTop=S*0.88;
+  const ftGrad=ctx.createLinearGradient(0,ftTop,0,S);
+  ftGrad.addColorStop(0,'rgba(0,0,0,0)'); ftGrad.addColorStop(1,'rgba(0,0,0,0.3)');
+  ctx.fillStyle=ftGrad; ctx.fillRect(0,ftTop,S,S-ftTop);
+
+  const ftCY=S*0.944;
+  if(logoImg){
+    ctx.save(); ctx.globalAlpha=0.72;
+    ctx.drawImage(logoImg, S/2+50, ftCY-14, 28, 28);
+    ctx.restore();
+  }
+
+  // فوتر: "عيد مبارك · MLSA 2026 ·" — نص مختلط نرسمه بـ SVG
+  const ftImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
+    fontSize: Math.round(S*0.018),
+    color: 'rgba(255,255,255,0.65)',
+    width: 700,
+    height: Math.round(S*0.032)
+  });
+  if(ftImg){
+    ctx.drawImage(ftImg, S/2-350+14, ftCY-Math.round(S*0.025), 700, Math.round(S*0.032));
+  }
+
+  return canvas;
+}
+
+// ══════════════════════════════════════════════
+//  رسم General Card
+// ══════════════════════════════════════════════
+
+async function drawGeneralCard() {
+  const W=900, H=1200;
+  const canvas=document.createElement('canvas');
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+
+  const bgImg=await loadImage('image/eid.png');
+  if(bgImg){ ctx.drawImage(bgImg,0,0,W,H); }
+  else {
+    const g=ctx.createLinearGradient(0,0,W,H);
+    g.addColorStop(0,'#881c3c'); g.addColorStop(1,'#d24a73');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  }
+  const ov=ctx.createLinearGradient(0,H*0.5,0,H);
+  ov.addColorStop(0,'rgba(0,0,0,0.05)'); ov.addColorStop(1,'rgba(0,0,0,0.55)');
+  ctx.fillStyle=ov; ctx.fillRect(0,0,W,H);
+
+  const name=document.getElementById('outName2').textContent.trim();
+  const bW=Math.min(W*0.82,700), bH=130;
+  const bX=(W-bW)/2, bY=H*0.72-bH/2;
+
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=30; ctx.shadowOffsetY=10;
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  roundRect(ctx,bX,bY,bW,bH,40); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,0.28)'; ctx.lineWidth=2.5;
+  roundRect(ctx,bX,bY,bW,bH,40); ctx.stroke();
+
+  // الاسم عبر SVG
+  const nameImg = await arabicTextToImage(name, {
+    fontSize: 54, color: '#ffffff',
+    fontFamily: 'Cairo, Tajawal, sans-serif',
+    fontWeight: '900',
+    width: bW, height: bH
+  });
+  if(nameImg){ ctx.drawImage(nameImg, bX, bY, bW, bH); }
+
+  return canvas;
+}
+
+// ══════════════════════════════════════════════
+//  Download
+// ══════════════════════════════════════════════
 
 async function downloadCard() {
-  const ids  = ['clubCard', 'genCard1'];
-  const card = ids.map(id => document.getElementById(id))
-                  .find(el => !el.classList.contains('hidden'));
-  if (!card) return;
+  const card = ['clubCard','genCard1']
+    .map(id => document.getElementById(id))
+    .find(el => !el.classList.contains('hidden'));
+  if(!card) return;
 
   const btn = document.getElementById('dlBtn');
   btn.innerHTML = 'جاري التحميل...';
   btn.disabled  = true;
 
-  if (document.fonts && document.fonts.ready) await document.fonts.ready;
-  await new Promise(r => setTimeout(r, 500));
+  if(document.fonts && document.fonts.ready) await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 400));
 
   try {
-    const canvas = await html2canvas(card, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: false,
-      backgroundColor: null,
-      logging: false,
-      imageTimeout: 15000,
-      foreignObjectRendering: false,
+    const canvas = card.id==='clubCard'
+      ? await drawClubCard()
+      : await drawGeneralCard();
 
-      onclone: (doc) => {
-
-        // ── أوقف كل الأنيميشن ──
-        const stopAnim = doc.createElement('style');
-        stopAnim.textContent = `*, *::before, *::after { animation: none !important; transition: none !important; }`;
-        doc.head.appendChild(stopAnim);
-
-        // ── CSS يصلح العربي المعكوس ──
-        const arabicFix = doc.createElement('style');
-        arabicFix.textContent = `
-          .b-name, .b-role, .gen1-name, .club-kol,
-          .club-ar-name, .footer-txt-ar, .footer-copy {
-            direction: rtl !important;
-            unicode-bidi: bidi-override !important;
-            text-align: center !important;
-            font-family: "Cairo", "Tajawal", sans-serif !important;
-          }
-          .b-name {
-            font-family: "Amiri", "Cairo", serif !important;
-          }
-        `;
-        doc.head.appendChild(arabicFix);
-
-        // ── اجبر اتجاه RTL على الصفحة كلها ──
-        doc.documentElement.setAttribute('dir', 'rtl');
-        doc.documentElement.setAttribute('lang', 'ar');
-        doc.body.setAttribute('dir', 'rtl');
-
-        // ── اجبر ظهور النصوص ──
-        doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar, .footer-copy').forEach(el => {
-          el.style.opacity         = '1';
-          el.style.visibility      = 'visible';
-          el.style.webkitTextFillColor = el.style.color || '';
-        });
-
-        // ── البادج ──
-        const badge = doc.querySelector('.club-badge');
-        if (badge) { badge.style.opacity='1'; badge.style.visibility='visible'; badge.style.display='flex'; }
-
-        // ── b-info ──
-        const info = doc.querySelector('.b-info');
-        if (info) { info.style.display='flex'; info.style.flexDirection='column'; info.style.alignItems='center'; info.style.gap='2px'; info.style.opacity='1'; info.style.visibility='visible'; }
-
-        // ── الاسم ──
-        const name = doc.querySelector('.b-name');
-        if (name) { name.style.display='block'; name.style.opacity='1'; name.style.visibility='visible'; name.style.color='#ffffff'; name.style.webkitTextFillColor='#ffffff'; name.style.direction='rtl'; name.style.unicodeBidi='bidi-override'; }
-
-        // ── المنصب ──
-        const role = doc.querySelector('.b-role');
-        if (role) {
-          const hasRole = role.textContent.trim().length > 0;
-          role.style.display=hasRole?'block':'none'; role.style.opacity='1'; role.style.visibility=hasRole?'visible':'hidden'; role.style.color='#50E6FF'; role.style.webkitTextFillColor='#50E6FF'; role.style.direction='rtl'; role.style.unicodeBidi='bidi-override';
-        }
-
-        // ── كل عام وأنتم بخير ──
-        const kol = doc.querySelector('.club-kol');
-        if (kol) { kol.style.display='block'; kol.style.opacity='1'; kol.style.visibility='visible'; kol.style.color='rgba(255,255,255,0.95)'; kol.style.webkitTextFillColor='rgba(255,255,255,0.95)'; kol.style.direction='rtl'; kol.style.unicodeBidi='bidi-override'; }
-
-        // ── اسم البطاقة العامة ──
-        const gen1name = doc.querySelector('.gen1-name');
-        if (gen1name) { gen1name.style.display='block'; gen1name.style.opacity='1'; gen1name.style.visibility='visible'; gen1name.style.color='#ffffff'; gen1name.style.webkitTextFillColor='#ffffff'; gen1name.style.direction='rtl'; gen1name.style.unicodeBidi='bidi-override'; }
-      }
-    });
-
-    const link    = document.createElement('a');
+    const link = document.createElement('a');
     link.download = 'mlsac-eid-1447.png';
-    link.href     = canvas.toDataURL('image/png');
+    link.href = canvas.toDataURL('image/png');
     link.click();
 
     btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
@@ -220,8 +443,7 @@ async function downloadCard() {
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
       btn.disabled  = false;
     }, 2200);
-
-  } catch (err) {
+  } catch(err) {
     console.error(err);
     alert('حدث خطأ: ' + err.message);
     btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
@@ -229,81 +451,54 @@ async function downloadCard() {
   }
 }
 
-// ── Floating shapes ───────────────────────────
+// ══════════════════════════════════════════════
+//  Floating shapes + Particles
+// ══════════════════════════════════════════════
 
 function createFloatingShapes() {
   const container = document.getElementById('floatingShapes');
   const colors = ['#0078D4','#50E6FF','#FFB900','#7FBA00'];
   const shapes = ['◆','✦','●','▪'];
-  for (let i = 0; i < 18; i++) {
-    const el = document.createElement('div');
-    el.className = 'float-shape';
-    const size = Math.random()*12+4;
-    const useEmoji = Math.random()>0.5;
-    el.style.cssText = `left:${Math.random()*100}%;bottom:-60px;width:${size}px;height:${size}px;${useEmoji?`color:${colors[Math.floor(Math.random()*colors.length)]};font-size:${size}px;`:`background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'3px'};transform:rotate(45deg);`}animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*12}s;`;
-    if (useEmoji) el.textContent = shapes[Math.floor(Math.random()*shapes.length)];
+  for(let i=0;i<18;i++){
+    const el=document.createElement('div');
+    el.className='float-shape';
+    const size=Math.random()*12+4, useEmoji=Math.random()>0.5;
+    el.style.cssText=`left:${Math.random()*100}%;bottom:-60px;width:${size}px;height:${size}px;${useEmoji?`color:${colors[Math.floor(Math.random()*colors.length)]};font-size:${size}px;`:`background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'3px'};transform:rotate(45deg);`}animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*12}s;`;
+    if(useEmoji) el.textContent=shapes[Math.floor(Math.random()*shapes.length)];
     container.appendChild(el);
   }
 }
 
-// ── Particle canvas ───────────────────────────
-
 function initParticleCanvas() {
-  const canvas = document.getElementById('particleCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W = window.innerWidth, H = window.innerHeight;
+  const canvas=document.getElementById('particleCanvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  let W=window.innerWidth, H=window.innerHeight;
   canvas.width=W; canvas.height=H;
-  window.addEventListener('resize', () => {
-    W=window.innerWidth; H=window.innerHeight;
-    canvas.width=W; canvas.height=H;
-  });
-  const particles = [];
-  for (let i=0;i<30;i++) particles.push({
-    x:Math.random()*W, y:Math.random()*H,
-    r:Math.random()*1.5+0.5,
-    speedX:(Math.random()-0.5)*0.3, speedY:(Math.random()-0.5)*0.3,
-    alpha:Math.random()*0.5+0.1,
-    color:Math.random()>0.5?'#50E6FF':'#FFB900'
-  });
-  function draw() {
+  window.addEventListener('resize',()=>{W=window.innerWidth;H=window.innerHeight;canvas.width=W;canvas.height=H;});
+  const particles=[];
+  for(let i=0;i<30;i++) particles.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.5,speedX:(Math.random()-0.5)*0.3,speedY:(Math.random()-0.5)*0.3,alpha:Math.random()*0.5+0.1,color:Math.random()>0.5?'#50E6FF':'#FFB900'});
+  function draw(){
     ctx.clearRect(0,0,W,H);
-    particles.forEach(p => {
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=p.color; ctx.globalAlpha=p.alpha; ctx.fill();
-      p.x+=p.speedX; p.y+=p.speedY;
-      if(p.x<0||p.x>W) p.speedX*=-1;
-      if(p.y<0||p.y>H) p.speedY*=-1;
-    });
+    particles.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.globalAlpha=p.alpha;ctx.fill();p.x+=p.speedX;p.y+=p.speedY;if(p.x<0||p.x>W)p.speedX*=-1;if(p.y<0||p.y>H)p.speedY*=-1;});
     requestAnimationFrame(draw);
   }
   draw();
 }
 
-// ── Keyboard shortcuts ────────────────────────
-
-document.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    if (!document.getElementById('step2A').classList.contains('hidden')) generateClub();
-    else if (!document.getElementById('step2B').classList.contains('hidden')) generateGeneral();
+document.addEventListener('keypress',(e)=>{
+  if(e.key==='Enter'){
+    if(!document.getElementById('step2A').classList.contains('hidden')) generateClub();
+    else if(!document.getElementById('step2B').classList.contains('hidden')) generateGeneral();
   }
 });
 
-// ── Shake animation ───────────────────────────
-
-const shakeStyle = document.createElement('style');
-shakeStyle.textContent = `
-  @keyframes shake {
-    0%,100%{transform:translateX(0)} 15%{transform:translateX(-8px)}
-    30%{transform:translateX(8px)} 45%{transform:translateX(-6px)}
-    60%{transform:translateX(6px)} 75%{transform:translateX(-3px)}
-    90%{transform:translateX(3px)}
-  }
-  .input-error { animation: shake .35s ease both !important; }
+const shakeStyle=document.createElement('style');
+shakeStyle.textContent=`
+  @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
+  .input-error{animation:shake .35s ease both !important;}
 `;
 document.head.appendChild(shakeStyle);
-
-// ── Init ──────────────────────────────────────
 
 createFloatingShapes();
 initParticleCanvas();
