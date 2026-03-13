@@ -970,12 +970,14 @@ body::after {
   background: rgba(255,255,255,.22);
   backdrop-filter: none;
   border: 1.5px solid rgba(255,255,255,.25);
-  border-radius: 16px;
-  padding: 8px 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,.2);
   white-space: nowrap;
-  max-width: 80%;
+  padding: 8px 20px 4px 20px;
+  max-width: 260px;
+  height: 70px;
+  border-radius: 12px;
   z-index: 4;
+  
 }
 
 
@@ -1019,26 +1021,35 @@ body::after {
   50% { opacity: 1; box-shadow: 0 0 16px rgba(80,230,255,.3); }
 }
 
-.b-info { text-align: center; }
+/* وثبتي هذا في CSS الأساسي */
 
-.b-name {
-  color: var(--white);
-  font-size: clamp(16px, 4vw, 24px);
-  font-weight: 900;
-  direction: rtl;
-  text-shadow: 0 2px 10px rgba(0,0,0,.2);
-  font-family: 'Cairo', 'Tajawal', sans-serif;
+.b-info{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  line-height:1;
 }
 
-.b-role {
-  color: rgba(255,255,255,.85);
-  font-size: clamp(10px,2.5vw,13px);
-  font-weight: 600;
-  direction: rtl;
-  display: none;
-  margin-top: 4px;
-  color: var(--cyan);
-  letter-spacing: .5px;
+/* وثبتي هذا في CSS الأساسي */
+
+.b-name{
+font-family:'Amiri',serif;
+font-weight:400;
+color:var(--white);
+font-size:clamp(20px,4vw,30px);
+line-height:1;
+margin:0;
+}
+
+.b-role{
+font-family:'Amiri',serif;
+font-weight:700;   /* Bold */
+color:var(--cyan);
+font-size:clamp(12px,2.5vw,16px);
+line-height:1;
+margin-top:3px;
 }
 
 .b-role.show { display: block; }
