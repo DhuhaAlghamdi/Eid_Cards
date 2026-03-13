@@ -68,14 +68,14 @@ function requireName(inputId) {
   if (!val) {
     el.focus();
     el.style.borderColor = '#F25022';
-    el.style.boxShadow   = '0 0 0 3px rgba(242,80,34,.2)';
-    el.style.animation   = 'shake .35s ease both';
+    el.style.boxShadow = '0 0 0 3px rgba(242,80,34,.2)';
+    el.style.animation = 'shake .35s ease both';
 
     // Shake animation via class
     el.classList.add('input-error');
     setTimeout(() => {
       el.style.borderColor = '';
-      el.style.boxShadow   = '';
+      el.style.boxShadow = '';
       el.classList.remove('input-error');
     }, 1400);
     return null;
@@ -153,7 +153,12 @@ function generateClub() {
 
   const roleEl = document.getElementById('outRole1');
   roleEl.textContent = role;
-  roleEl.classList.toggle('show', !!role);
+  const roleSvg = document.getElementById('rolesvg');
+  if (role) {
+    roleSvg.classList.remove('hidden');
+  } else {
+    roleSvg.classList.add('hidden');
+  }
 
   buildClubStars();
   showResult('clubCard');
@@ -214,20 +219,17 @@ function downloadCard() {
     imageTimeout: 12000,
 
     onclone: (doc) => {
-      doc.documentElement.setAttribute('lang', 'ar');
-      doc.documentElement.setAttribute('dir', 'rtl');
-      doc.body.setAttribute('dir', 'rtl');
+  doc.documentElement.setAttribute('lang', 'ar');
+  doc.documentElement.setAttribute('dir', 'rtl');
+  doc.body.setAttribute('dir', 'rtl');
 
-      doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar').forEach(el => {
-        el.style.direction    = 'rtl';
-        el.style.unicodeBidi  = 'bidi-override';
-        el.style.fontFamily   = 'Tajawal, Cairo, sans-serif';
-        el.style.textAlign    = 'center';
-        el.style.writingMode  = 'horizontal-tb';
-        el.style.display      = 'block';
-        el.style.width        = '100%';
-      });
-    }
+  doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar').forEach(el => {
+    el.style.direction   = 'rtl';
+    el.style.unicodeBidi = 'embed';
+    el.style.fontFamily  = 'Tajawal, Cairo, sans-serif';
+    el.style.textAlign   = 'right';
+  });
+}
 
   }).then(canvas => {
     const link = document.createElement('a');
