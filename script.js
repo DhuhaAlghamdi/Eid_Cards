@@ -122,318 +122,117 @@ function showResult(visibleId) {
 }
 
 // ══════════════════════════════════════════════
-//  Helpers
-// ══════════════════════════════════════════════
-
-function loadImage(src) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload  = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
-  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r);
-  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h);
-  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r);
-  ctx.quadraticCurveTo(x,y,x+r,y);
-  ctx.closePath();
-}
-
-// رسم نص عربي صح على canvas بدون SVG
-// الحل: نستخدم ctx.direction='rtl' مع textAlign='center'
-// وnرسم النص على offscreen canvas مستقل أولاً للتأكد
-function drawArabicText(ctx, text, x, y, opts = {}) {
-  const fontSize   = opts.fontSize   || 48;
-  const color      = opts.color      || '#ffffff';
-  const fontFamily = opts.fontFamily || '"Cairo", "Tajawal", sans-serif';
-  const fontWeight = opts.fontWeight || '700';
-  const align      = opts.align      || 'center';
-
-  ctx.save();
-  ctx.font        = `${fontWeight} ${fontSize}px ${fontFamily}`;
-  ctx.fillStyle   = color;
-  ctx.textAlign   = align;
-  ctx.textBaseline = 'middle';
-
-  // الحل الصحيح لـ iOS Safari:
-  // نرسم على offscreen canvas بـ direction=rtl
-  // ثم نطبعه على الـ canvas الأساسي
-  const offscreen = document.createElement('canvas');
-  const measure   = ctx.measureText(text);
-  const tw        = Math.ceil(measure.width) + fontSize * 2;
-  const th        = Math.ceil(fontSize * 1.8);
-  offscreen.width  = tw;
-  offscreen.height = th;
-
-  const octx = offscreen.getContext('2d');
-  octx.font        = `${fontWeight} ${fontSize}px ${fontFamily}`;
-  octx.fillStyle   = color;
-  octx.textAlign   = 'center';
-  octx.textBaseline = 'middle';
-  octx.direction   = 'rtl';
-
-  octx.fillText(text, tw/2, th/2);
-
-  // ارسم الـ offscreen على الـ canvas الأساسي
-  if (align === 'center') {
-    ctx.drawImage(offscreen, x - tw/2, y - th/2);
-  } else if (align === 'right') {
-    ctx.drawImage(offscreen, x - tw, y - th/2);
-  } else {
-    ctx.drawImage(offscreen, x, y - th/2);
-  }
-
-  ctx.restore();
-}
-
-// ══════════════════════════════════════════════
-//  رسم Club Card
-// ══════════════════════════════════════════════
-
-async function drawClubCard() {
-  const S = 1200;
-  const canvas = document.createElement('canvas');
-  canvas.width = S; canvas.height = S;
-  const ctx = canvas.getContext('2d');
-
-  // خلفية
-  const bg = ctx.createLinearGradient(0,0,S*0.6,S);
-  bg.addColorStop(0,'#041530'); bg.addColorStop(0.35,'#0a2568');
-  bg.addColorStop(0.70,'#0d5bc9'); bg.addColorStop(1,'#1a78e8');
-  ctx.fillStyle=bg; ctx.fillRect(0,0,S,S);
-
-  const r1=ctx.createRadialGradient(S*0.3,0,0,S*0.3,0,S*0.55);
-  r1.addColorStop(0,'rgba(80,230,255,0.13)'); r1.addColorStop(1,'transparent');
-  ctx.fillStyle=r1; ctx.fillRect(0,0,S,S);
-
-  const r2=ctx.createRadialGradient(S*0.7,S,0,S*0.7,S,S*0.55);
-  r2.addColorStop(0,'rgba(0,120,212,0.2)'); r2.addColorStop(1,'transparent');
-  ctx.fillStyle=r2; ctx.fillRect(0,0,S,S);
-
-  // شبكة
-  ctx.strokeStyle='rgba(255,255,255,0.022)'; ctx.lineWidth=1;
-  for(let x=0;x<S;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,S);ctx.stroke();}
-  for(let y=0;y<S;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(S,y);ctx.stroke();}
-
-  // نجوم
-  [[0.08,0.14],[0.88,0.12],[0.15,0.58],[0.82,0.62],[0.50,0.08],
-   [0.22,0.32],[0.75,0.32],[0.35,0.78],[0.65,0.22],[0.12,0.48],
-   [0.90,0.82],[0.50,0.92]].forEach(([xr,yr])=>{
-    ctx.fillStyle=`rgba(255,255,255,${(0.2+Math.random()*0.35).toFixed(2)})`;
-    ctx.font=`${Math.round(Math.random()*12+7)}px serif`;
-    ctx.textAlign='center';
-    ctx.fillText(Math.random()>0.5?'✦':'✧',xr*S,yr*S);
-  });
-
-  // هيدر
-  const hdrH = S*0.13;
-  const hdrGrad=ctx.createLinearGradient(0,0,0,hdrH*1.5);
-  hdrGrad.addColorStop(0,'rgba(0,8,30,0.92)'); hdrGrad.addColorStop(1,'rgba(0,8,30,0)');
-  ctx.fillStyle=hdrGrad; ctx.fillRect(0,0,S,hdrH*1.5);
-  ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,hdrH); ctx.lineTo(S,hdrH); ctx.stroke();
-
-  // لوغو
-  const logoImg = await loadImage('image/logo.png');
-  const logoSize = Math.round(hdrH*0.60);
-  const logoCX = S/2 + 20;
-  const logoY  = (hdrH-logoSize)/2;
-  if(logoImg){
-    ctx.save(); ctx.shadowColor='rgba(80,230,255,0.3)'; ctx.shadowBlur=16;
-    ctx.drawImage(logoImg, logoCX, logoY, logoSize, logoSize);
-    ctx.restore();
-  }
-
-  // "Microsoft LSAC Club" إنجليزي
-  ctx.save();
-  ctx.textAlign='right'; ctx.direction='ltr'; ctx.fillStyle='#ffffff';
-  ctx.font=`800 ${Math.round(hdrH*0.21)}px Cairo,Tajawal,sans-serif`;
-  ctx.fillText('Microsoft LSAC Club', logoCX-12, hdrH*0.38);
-  ctx.restore();
-
-  // "نادي مايكروسوفت" عربي
-  drawArabicText(ctx, 'نادي مايكروسوفت', logoCX - 12 - 200, hdrH*0.72, {
-    fontSize: Math.round(hdrH*0.19),
-    color: '#50E6FF',
-    align: 'center'
-  });
-
-  // صورة happyeid
-  const eidTop=S*0.13, eidBot=S*0.48;
-  const eidImg=await loadImage('image/happyeid.png');
-  if(eidImg){
-    const maxW=S*0.72, maxH=eidBot-eidTop-10;
-    const natR=eidImg.width/eidImg.height;
-    let dW=maxW, dH=maxW/natR;
-    if(dH>maxH){dH=maxH; dW=maxH*natR;}
-    const dX=(S-dW)/2, dY=eidTop+(maxH-dH)/2+5;
-    ctx.save(); ctx.shadowColor='rgba(0,0,0,0.28)'; ctx.shadowBlur=20;
-    ctx.drawImage(eidImg,dX,dY,dW,dH);
-    ctx.restore();
-  }
-
-  // "كل عام وأنتم بخير"
-  const kolCY = S*0.535;
-  ctx.fillStyle='#FFB900'; ctx.font='700 28px serif'; ctx.textAlign='center';
-  ctx.fillText('✦', S/2-230, kolCY+7);
-  ctx.fillText('✦', S/2+230, kolCY+7);
-
-  drawArabicText(ctx, 'كل عام وأنتم بخير', S/2, kolCY, {
-    fontSize: Math.round(S*0.043),
-    color: 'rgba(255,255,255,0.95)',
-    fontWeight: '700'
-  });
-
-  // بادج
-  const name = document.getElementById('outName1').textContent.trim();
-  const role = document.getElementById('outRole1').textContent.trim();
-
-  const bdgCY=S*0.715, bdgW=S*0.42, bdgH=role?S*0.135:S*0.092;
-  const bdgX=(S-bdgW)/2, bdgY=bdgCY-bdgH/2;
-
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,0.25)'; ctx.shadowBlur=24; ctx.shadowOffsetY=7;
-  ctx.fillStyle='rgba(255,255,255,0.22)';
-  roundRect(ctx,bdgX,bdgY,bdgW,bdgH,18); ctx.fill();
-  ctx.restore();
-  ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2;
-  roundRect(ctx,bdgX,bdgY,bdgW,bdgH,18); ctx.stroke();
-
-  // اسم
-  drawArabicText(ctx, name, S/2, role ? bdgY+bdgH*0.35 : bdgY+bdgH*0.50, {
-    fontSize: role ? Math.round(S*0.038) : Math.round(S*0.044),
-    color: '#ffffff',
-    fontFamily: '"Amiri", "Cairo", sans-serif'
-  });
-
-  // منصب
-  if(role){
-    drawArabicText(ctx, role, S/2, bdgY+bdgH*0.75, {
-      fontSize: Math.round(S*0.026),
-      color: '#50E6FF'
-    });
-  }
-
-  // فوتر
-  const ftTop=S*0.88;
-  const ftGrad=ctx.createLinearGradient(0,ftTop,0,S);
-  ftGrad.addColorStop(0,'rgba(0,0,0,0)'); ftGrad.addColorStop(1,'rgba(0,0,0,0.3)');
-  ctx.fillStyle=ftGrad; ctx.fillRect(0,ftTop,S,S-ftTop);
-
-  const ftCY=S*0.944;
-  if(logoImg){
-    ctx.save(); ctx.globalAlpha=0.72;
-    ctx.drawImage(logoImg, S/2+50, ftCY-14, 28, 28);
-    ctx.restore();
-  }
-
-  // فوتر نص: MLSA 2026 إنجليزي + عيد مبارك عربي
-  ctx.save();
-  ctx.textAlign='center'; ctx.direction='ltr';
-  ctx.fillStyle='rgba(255,255,255,0.65)';
-  ctx.font=`600 ${Math.round(S*0.018)}px Cairo,Tajawal,sans-serif`;
-  ctx.fillText('· MLSA 2026 ·', S/2+60, ftCY+5);
-  ctx.restore();
-
-  drawArabicText(ctx, 'عيد مبارك', S/2-80, ftCY, {
-    fontSize: Math.round(S*0.018),
-    color: 'rgba(255,255,255,0.65)',
-    fontWeight: '600'
-  });
-
-  return canvas;
-}
-
-// ══════════════════════════════════════════════
-//  رسم General Card
-// ══════════════════════════════════════════════
-
-async function drawGeneralCard() {
-  const W=900, H=1200;
-  const canvas=document.createElement('canvas');
-  canvas.width=W; canvas.height=H;
-  const ctx=canvas.getContext('2d');
-
-  const bgImg=await loadImage('image/eid.png');
-  if(bgImg){ ctx.drawImage(bgImg,0,0,W,H); }
-  else {
-    const g=ctx.createLinearGradient(0,0,W,H);
-    g.addColorStop(0,'#881c3c'); g.addColorStop(1,'#d24a73');
-    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  }
-  const ov=ctx.createLinearGradient(0,H*0.5,0,H);
-  ov.addColorStop(0,'rgba(0,0,0,0.05)'); ov.addColorStop(1,'rgba(0,0,0,0.55)');
-  ctx.fillStyle=ov; ctx.fillRect(0,0,W,H);
-
-  const name=document.getElementById('outName2').textContent.trim();
-  const bW=Math.min(W*0.82,700), bH=130;
-  const bX=(W-bW)/2, bY=H*0.72-bH/2;
-
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=30; ctx.shadowOffsetY=10;
-  ctx.fillStyle='rgba(0,0,0,0.45)';
-  roundRect(ctx,bX,bY,bW,bH,40); ctx.fill();
-  ctx.restore();
-  ctx.strokeStyle='rgba(255,255,255,0.28)'; ctx.lineWidth=2.5;
-  roundRect(ctx,bX,bY,bW,bH,40); ctx.stroke();
-
-  drawArabicText(ctx, name, W/2, bY+bH*0.52, {
-    fontSize: 54,
-    color: '#ffffff',
-    fontFamily: '"Cairo", "Tajawal", sans-serif',
-    fontWeight: '900'
-  });
-
-  return canvas;
-}
-
-// ══════════════════════════════════════════════
-//  Download
+//  Download — html2canvas بدون تلوث cross-origin
 // ══════════════════════════════════════════════
 
 async function downloadCard() {
   const card = ['clubCard','genCard1']
     .map(id => document.getElementById(id))
     .find(el => !el.classList.contains('hidden'));
-  if(!card) return;
+  if (!card) return;
 
   const btn = document.getElementById('dlBtn');
   btn.innerHTML = 'جاري التحميل...';
   btn.disabled  = true;
 
-  if(document.fonts && document.fonts.ready) await document.fonts.ready;
-  await new Promise(r => setTimeout(r, 400));
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
 
   try {
-    const canvas = card.id==='clubCard'
-      ? await drawClubCard()
-      : await drawGeneralCard();
+    // ── الخطوة المهمة: نحول كل الصور لـ dataURL قبل html2canvas ──
+    // هذا يمنع "tainted canvas" على iOS
+    await preloadImagesAsDataURL(card);
+    await new Promise(r => setTimeout(r, 600));
 
-    const link = document.createElement('a');
-    link.download = 'mlsac-eid-1447.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    const canvas = await html2canvas(card, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,   // ← مهم على iOS
+      backgroundColor: null,
+      logging: false,
+      imageTimeout: 20000,
+      foreignObjectRendering: false,
+
+      onclone: (doc) => {
+        // أوقف الأنيميشن
+        const s = doc.createElement('style');
+        s.textContent = `*,*::before,*::after{animation:none!important;transition:none!important;}`;
+        doc.head.appendChild(s);
+
+        // اجبر RTL وظهور النصوص
+        doc.documentElement.setAttribute('dir','rtl');
+        doc.documentElement.setAttribute('lang','ar');
+        doc.body.setAttribute('dir','rtl');
+
+        const fix = doc.createElement('style');
+        fix.textContent = `
+          .b-name,.b-role,.gen1-name,.club-kol,
+          .club-ar-name,.footer-txt-ar,.footer-copy,
+          .club-en-name,.footer-txt {
+            opacity:1!important; visibility:visible!important;
+            direction:rtl!important; unicode-bidi:embed!important;
+            text-align:center!important;
+            -webkit-text-fill-color:inherit!important;
+          }
+        `;
+        doc.head.appendChild(fix);
+
+        // اجبر ظهور البادج والاسم
+        ['.club-badge','.b-info'].forEach(sel => {
+          const el = doc.querySelector(sel);
+          if(el){ el.style.opacity='1'; el.style.visibility='visible'; el.style.display='flex'; }
+        });
+        const nm = doc.querySelector('.b-name');
+        if(nm){ nm.style.opacity='1'; nm.style.visibility='visible'; nm.style.color='#fff'; nm.style.webkitTextFillColor='#fff'; }
+        const rl = doc.querySelector('.b-role');
+        if(rl){ const h=rl.textContent.trim().length>0; rl.style.display=h?'block':'none'; rl.style.opacity='1'; rl.style.color='#50E6FF'; rl.style.webkitTextFillColor='#50E6FF'; }
+        const kl = doc.querySelector('.club-kol');
+        if(kl){ kl.style.opacity='1'; kl.style.visibility='visible'; kl.style.color='rgba(255,255,255,0.95)'; kl.style.webkitTextFillColor='rgba(255,255,255,0.95)'; }
+        const gn = doc.querySelector('.gen1-name');
+        if(gn){ gn.style.opacity='1'; gn.style.visibility='visible'; gn.style.color='#fff'; gn.style.webkitTextFillColor='#fff'; }
+      }
+    });
+
+    // استخدم toBlob بدل toDataURL — يتجنب "insecure" على iOS
+    canvas.toBlob(blob => {
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = 'mlsac-eid-1447.png';
+      link.href = url;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+    }, 'image/png');
 
     btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
     setTimeout(() => {
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
       btn.disabled  = false;
     }, 2200);
+
   } catch(err) {
     console.error(err);
     alert('حدث خطأ: ' + err.message);
     btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
     btn.disabled  = false;
   }
+}
+
+// تحويل صور الكارد لـ dataURL قبل html2canvas
+async function preloadImagesAsDataURL(card) {
+  const imgs = card.querySelectorAll('img');
+  const promises = Array.from(imgs).map(img => {
+    return new Promise(resolve => {
+      if (!img.src || img.src.startsWith('data:')) { resolve(); return; }
+      fetch(img.src)
+        .then(r => r.blob())
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onload = e => { img.src = e.target.result; resolve(); };
+          reader.readAsDataURL(blob);
+        })
+        .catch(() => resolve());
+    });
+  });
+  await Promise.all(promises);
 }
 
 // ══════════════════════════════════════════════
