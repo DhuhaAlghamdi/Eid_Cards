@@ -214,17 +214,20 @@ function downloadCard() {
     imageTimeout: 12000,
 
     onclone: (doc) => {
-  doc.documentElement.setAttribute('lang', 'ar');
-  doc.documentElement.setAttribute('dir', 'rtl');
-  doc.body.setAttribute('dir', 'rtl');
+      doc.documentElement.setAttribute('lang', 'ar');
+      doc.documentElement.setAttribute('dir', 'rtl');
+      doc.body.setAttribute('dir', 'rtl');
 
-  doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar').forEach(el => {
-    el.style.direction   = 'rtl';
-    el.style.unicodeBidi = 'embed';
-    el.style.fontFamily  = 'Tajawal, Cairo, sans-serif';
-    el.style.textAlign   = 'right';
-  });
-}
+      doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar').forEach(el => {
+        el.style.direction    = 'rtl';
+        el.style.unicodeBidi  = 'bidi-override';
+        el.style.fontFamily   = 'Tajawal, Cairo, sans-serif';
+        el.style.textAlign    = 'center';
+        el.style.writingMode  = 'horizontal-tb';
+        el.style.display      = 'block';
+        el.style.width        = '100%';
+      });
+    }
 
   }).then(canvas => {
     const link = document.createElement('a');
