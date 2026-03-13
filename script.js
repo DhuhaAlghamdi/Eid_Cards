@@ -328,7 +328,8 @@ function replaceArabicElementsWithImages(clonedDoc) {
 // ── Download ──────────────────────────────────
 
 async function downloadCard() {
-  const ids = ['clubCard', 'genCard1'];
+
+   const ids = ['clubCard', 'genCard1'];
   const card = ids
     .map(id => document.getElementById(id))
     .find(el => !el.classList.contains('hidden'));
@@ -336,8 +337,17 @@ async function downloadCard() {
   if (!card) return;
 
   const btn = document.getElementById('dlBtn');
-  btn.innerHTML = '<span class="dl-icon">⏳</span> <span>جاري الإعداد...</span>';
+
+  btn.innerHTML = 'جاري التحميل...';
   btn.disabled = true;
+
+  // مهم جداً للآيفون
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+
+  // مهلة صغيرة عشان Safari
+  await new Promise(resolve => setTimeout(resolve, 400));
 
   try {
     // انتظار تحميل الخطوط
