@@ -252,7 +252,7 @@ function replaceArabicElementsWithImages(clonedDoc) {
       marginTop: 0
     },
     {
-      selector: '.b-name',
+      selector: '.b-name, .gen1-name',
       scale: 2.2,
       heightScale: 1.15,
       paddingX: 16,
@@ -265,7 +265,7 @@ function replaceArabicElementsWithImages(clonedDoc) {
       heightScale: 1.1,
       paddingX: 12,
       paddingY: 4,
-      marginTop: -20 
+      marginTop: -20
     },
     {
       selector: '.footer-copy, .footer-txt, .footer-txt-ar',
@@ -327,7 +327,7 @@ function replaceArabicElementsWithImages(clonedDoc) {
 
 // ── Download ──────────────────────────────────
 
-function downloadCard() {
+async function downloadCard() {
   const ids = ['clubCard', 'genCard1'];
   const card = ids
     .map(id => document.getElementById(id))
@@ -339,100 +339,104 @@ function downloadCard() {
   btn.innerHTML = '<span class="dl-icon">⏳</span> <span>جاري الإعداد...</span>';
   btn.disabled = true;
 
-  html2canvas(card, {
-    scale: 4,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: null,
-    logging: false,
-    imageTimeout: 15000,
-    foreignObjectRendering: false,
-
-    onclone: (doc) => {
-      doc.documentElement.setAttribute('lang', 'ar');
-      doc.documentElement.setAttribute('dir', 'rtl');
-      doc.body.setAttribute('dir', 'rtl');
-
-      doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar, .footer-copy').forEach(el => {
-        el.style.direction = 'rtl';
-        el.style.unicodeBidi = 'plaintext';
-        el.style.fontFamily = 'Tajawal, Cairo, sans-serif';
-        el.style.textAlign = 'center';
-        el.style.lineHeight = '1';
-        el.style.margin = '0';
-        el.style.padding = '0';
-      });
-
-      // وداخل downloadCard > onclone
-      // استبدلي جزء .b-name و .b-role و .b-info و .club-badge بهذا فقط
-
-      const badge = doc.querySelector('.club-badge');
-      if (badge) {
-        badge.style.display = 'flex';
-        badge.style.flexDirection = 'column';
-        badge.style.alignItems = 'center';
-        badge.style.justifyContent = 'center';
-        badge.style.gap = '0';
-        badge.style.padding = '8px 20px 6px 20px';
-      }
-
-      const info = doc.querySelector('.b-info');
-      if (info) {
-        info.style.display = 'flex';
-        info.style.flexDirection = 'column';
-        info.style.alignItems = 'center';
-        info.style.justifyContent = 'center';
-        info.style.gap = '0';
-        info.style.lineHeight = '1';
-        info.style.margin = '0';
-        info.style.padding = '0';
-      }
-
-      // وداخل downloadCard > onclone
-      // استبدلي فقط جزء .b-name و .b-role بهذا
-
-      const name = doc.querySelector('.b-name');
-      if (name) {
-        name.style.display = 'flex';
-        name.style.alignItems = 'center';
-        name.style.justifyContent = 'center';
-        name.style.lineHeight = '1';
-        name.style.margin = '0';
-        name.style.padding = '0';
-      }
-
-      const role = doc.querySelector('.b-role');
-      if (role) {
-        role.style.display = role.textContent.trim() ? 'flex' : 'none';
-        role.style.alignItems = 'center';
-        role.style.justifyContent = 'center';
-        role.style.lineHeight = '1';
-        role.style.margin = '0';
-        role.style.marginTop = '-28px';
-        role.style.padding = '0';
-      }
-
-      replaceArabicElementsWithImages(doc);
+  try {
+    // انتظار تحميل الخطوط
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
     }
-  })
-    .then(canvas => {
-      const link = document.createElement('a');
-      link.download = 'mlsac-eid-1447.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
 
-      btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
-      setTimeout(() => {
-        btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-        btn.disabled = false;
-      }, 2200);
-    })
-    .catch(err => {
-      console.error(err);
-      alert('حدث خطأ أثناء التحميل، حاولي مجددًا');
+    // انتظار بسيط إضافي مهم في Safari
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const canvas = await html2canvas(card, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: null,
+      logging: false,
+      imageTimeout: 20000,
+      foreignObjectRendering: false,
+
+      onclone: (doc) => {
+        doc.documentElement.setAttribute('lang', 'ar');
+        doc.documentElement.setAttribute('dir', 'rtl');
+        doc.body.setAttribute('dir', 'rtl');
+
+        doc.querySelectorAll('.b-name, .b-role, .gen1-name, .club-kol, .club-en-name, .club-ar-name, .footer-txt, .footer-txt-ar, .footer-copy').forEach(el => {
+          el.style.direction = 'rtl';
+          el.style.unicodeBidi = 'plaintext';
+          el.style.fontFamily = 'Tajawal, Cairo, sans-serif';
+          el.style.textAlign = 'center';
+          el.style.lineHeight = '1';
+          el.style.margin = '0';
+          el.style.padding = '0';
+          el.style.webkitTextFillColor = el.style.color || '#fff';
+        });
+
+        const badge = doc.querySelector('.club-badge');
+        if (badge) {
+          badge.style.display = 'flex';
+          badge.style.flexDirection = 'column';
+          badge.style.alignItems = 'center';
+          badge.style.justifyContent = 'center';
+          badge.style.gap = '0';
+          badge.style.padding = '8px 20px 6px 20px';
+        }
+
+        const info = doc.querySelector('.b-info');
+        if (info) {
+          info.style.display = 'flex';
+          info.style.flexDirection = 'column';
+          info.style.alignItems = 'center';
+          info.style.justifyContent = 'center';
+          info.style.gap = '0';
+          info.style.lineHeight = '1';
+          info.style.margin = '0';
+          info.style.padding = '0';
+        }
+
+        const name = doc.querySelector('.b-name, .gen1-name');
+        if (name) {
+          name.style.display = 'flex';
+          name.style.alignItems = 'center';
+          name.style.justifyContent = 'center';
+          name.style.lineHeight = '1';
+          name.style.margin = '0';
+          name.style.padding = '0';
+        }
+
+        const role = doc.querySelector('.b-role');
+        if (role) {
+          role.style.display = role.textContent.trim() ? 'flex' : 'none';
+          role.style.alignItems = 'center';
+          role.style.justifyContent = 'center';
+          role.style.lineHeight = '1';
+          role.style.margin = '0';
+          role.style.marginTop = '-28px';
+          role.style.padding = '0';
+        }
+
+        replaceArabicElementsWithImages(doc);
+      }
+    });
+
+    const link = document.createElement('a');
+    link.download = 'mlsac-eid-1447.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+    btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
+    setTimeout(() => {
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
       btn.disabled = false;
-    });
+    }, 2200);
+
+  } catch (err) {
+    console.error(err);
+    alert('حدث خطأ أثناء التحميل، حاولي مجددًا');
+    btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
+    btn.disabled = false;
+  }
 }
 
 // ── Floating background shapes ────────────────
