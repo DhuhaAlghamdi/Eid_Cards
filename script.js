@@ -148,7 +148,7 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// رسم نص عربي عبر SVG foreignObject ← يحل مشكلة الانعكاس 100%
+// رسم نص عربي عبر SVG — data URL بدل createObjectURL لحل مشكلة iOS Safari
 function arabicTextToImage(text, opts = {}) {
   const fontSize   = opts.fontSize   || 48;
   const color      = opts.color      || '#ffffff';
@@ -173,14 +173,14 @@ function arabicTextToImage(text, opts = {}) {
     </foreignObject>
   </svg>`;
 
-  const blob = new Blob([svg], {type:'image/svg+xml;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
+  // data URL بدل createObjectURL — يحل مشكلة "insecure operation" في iOS Safari
+  const encoded = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 
   return new Promise(resolve => {
     const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
-    img.src = url;
+    img.onload  = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = encoded;
   });
 }
 
@@ -236,17 +236,14 @@ async function drawClubCard() {
   const logoSize = Math.round(hdrH * 0.62);
   const gap = 16;
 
-  // نحسب عرض النص الإنجليزي
   const enFontSize = Math.round(hdrH * 0.21);
   ctx.font = `800 ${enFontSize}px Cairo,Tajawal,sans-serif`;
   const enTextW = ctx.measureText('Microsoft LSAC Club').width;
 
-  // عرض صورة الاسم العربي
   const arFontSize = Math.round(hdrH * 0.19);
   const arImgW = 340;
   const arImgH = Math.round(hdrH * 0.30);
 
-  // المجموعة الكلية: لوغو + gap + نص (مركزية)
   const blockW = logoSize + gap + Math.max(enTextW, arImgW);
   const blockX = (S - blockW) / 2;
   const logoY  = (hdrH - logoSize) / 2;
@@ -260,7 +257,6 @@ async function drawClubCard() {
 
   const textAreaX = blockX + logoSize + gap;
 
-  // النص الإنجليزي
   ctx.save();
   ctx.textAlign = 'left'; ctx.direction = 'ltr';
   ctx.fillStyle = '#ffffff';
@@ -268,7 +264,6 @@ async function drawClubCard() {
   ctx.fillText('Microsoft LSAC Club', textAreaX, hdrH * 0.40);
   ctx.restore();
 
-  // النص العربي عبر SVG
   const arNameImg = await arabicTextToImage('نادي مايكروسوفت', {
     fontSize: arFontSize,
     color: '#50E6FF',
@@ -296,10 +291,9 @@ async function drawClubCard() {
     ctx.restore();
   }
 
-  // ── "كل عام وأنتم بخير" (51% → 60%) ──
+  // ── "كل عام وأنتم بخير" ──
   const kolCY = S * 0.555;
 
-  // نجمتان ذهبيتان
   ctx.fillStyle='#FFB900'; ctx.font='700 26px serif'; ctx.textAlign='center';
   ctx.fillText('✦', S/2 - 210, kolCY + 8);
   ctx.fillText('✦', S/2 + 210, kolCY + 8);
@@ -318,12 +312,10 @@ async function drawClubCard() {
     ctx.drawImage(kolImg, S/2 - kolW/2, kolCY - kolH * 0.75, kolW, kolH);
   }
 
-  // ── البادج (63% → 78%) — مطابق لـ CSS بالضبط ──
+  // ── البادج — مطابق لـ CSS بالضبط ──
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
-  // CSS: max-width:260px على بطاقة ~560px عرض → نسبة ~46%
-  // height: 70px على 560px → نسبة ~12.5%
   const bdgW  = S * 0.38;
   const bdgH  = role ? S * 0.115 : S * 0.085;
   const bdgCY = S * 0.695;
@@ -331,24 +323,20 @@ async function drawClubCard() {
   const bdgY  = bdgCY - bdgH / 2;
   const bdgR  = 18;
 
-  // ظل البادج
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,0.25)'; ctx.shadowBlur=24; ctx.shadowOffsetY=7;
   ctx.fillStyle='rgba(255,255,255,0.22)';
   roundRect(ctx, bdgX, bdgY, bdgW, bdgH, bdgR); ctx.fill();
   ctx.restore();
 
-  // حدود البادج
   ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2;
   roundRect(ctx, bdgX, bdgY, bdgW, bdgH, bdgR); ctx.stroke();
 
-  // حلقة توهج البادج
   ctx.save();
   ctx.strokeStyle='rgba(80,230,255,0.3)'; ctx.lineWidth=1.5;
   roundRect(ctx, bdgX-3, bdgY-3, bdgW+6, bdgH+6, bdgR+3); ctx.stroke();
   ctx.restore();
 
-  // الاسم داخل البادج
   const nameFontSize = role ? Math.round(S * 0.034) : Math.round(S * 0.038);
   const nameImgH     = Math.round(nameFontSize * 1.5);
   const nameImg2 = await arabicTextToImage(name, {
@@ -365,7 +353,6 @@ async function drawClubCard() {
     ctx.drawImage(nameImg2, bdgX, nameY, bdgW, nameImgH);
   }
 
-  // المنصب داخل البادج
   if(role){
     const roleFontSize = Math.round(S * 0.024);
     const roleImgH     = Math.round(roleFontSize * 1.5);
@@ -390,7 +377,6 @@ async function drawClubCard() {
   const ftCY = S * 0.944;
   const ftLogoSize = 28;
 
-  // فوتر: "عيد مبارك · MLSA 2026 ·" — مركزي
   const ftFontSize = Math.round(S * 0.018);
   const ftImgW = 700, ftImgH = Math.round(S * 0.032);
   const ftImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
@@ -403,7 +389,6 @@ async function drawClubCard() {
     ctx.drawImage(ftImg, S/2 - ftImgW/2, ftCY - ftImgH * 0.8, ftImgW, ftImgH);
   }
 
-  // لوغو الفوتر — بجانب النص يمين
   if(logoImg){
     ctx.save(); ctx.globalAlpha=0.72;
     ctx.drawImage(logoImg, S/2 + ftImgW/2 - ftLogoSize - 10, ftCY - ftLogoSize/2 - 2, ftLogoSize, ftLogoSize);
@@ -446,7 +431,6 @@ async function drawGeneralCard() {
   ctx.strokeStyle='rgba(255,255,255,0.28)'; ctx.lineWidth=2.5;
   roundRect(ctx,bX,bY,bW,bH,40); ctx.stroke();
 
-  // الاسم عبر SVG
   const nameImg = await arabicTextToImage(name, {
     fontSize: 54, color: '#ffffff',
     fontFamily: 'Cairo, Tajawal, sans-serif',
