@@ -861,7 +861,7 @@ body::after {
 ══════════════════════════════════════════ */
 .gen1-name-badge {
   position: absolute;
-  top: 65%;
+  top: 68%;
   left: 50%;
   transform: translateX(-50%);
   width: 52%;
