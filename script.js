@@ -30,7 +30,11 @@ function goBack() {
 
 function goBackFromResult() {
   document.getElementById('resultSection').classList.add('hidden');
-  ['clubCard', 'genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['clubCard', 'genCard1'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+
   document.getElementById('step1').classList.remove('hidden');
   document.getElementById('mainOpt1').classList.remove('active');
   document.getElementById('mainOpt2').classList.remove('active');
@@ -77,10 +81,20 @@ const STAR_POSITIONS = [
 function buildClubStars() {
   const container = document.getElementById('clubStars');
   if (!container) return;
+
   container.innerHTML = '';
+
   STAR_POSITIONS.forEach(([x, y], i) => {
     const star = document.createElement('div');
-    star.style.cssText = `position:absolute;left:${x}%;top:${y}%;color:rgba(255,255,255,${0.3 + Math.random() * 0.5});font-size:${Math.random() * 10 + 8}px;animation:popTwinkle ${2 + Math.random() * 2}s ${i * 0.2}s infinite;pointer-events:none;`;
+    star.style.cssText = `
+      position:absolute;
+      left:${x}%;
+      top:${y}%;
+      color:rgba(255,255,255,${0.3 + Math.random() * 0.5});
+      font-size:${Math.random() * 10 + 8}px;
+      animation:popTwinkle ${2 + Math.random() * 2}s ${i * 0.2}s infinite;
+      pointer-events:none;
+    `;
     star.textContent = Math.random() > 0.5 ? '✦' : '✧';
     container.appendChild(star);
   });
@@ -95,11 +109,21 @@ const FESTIVE_POS = [
 function buildFestiveDecor(containerId, colorA, colorB) {
   const c = document.getElementById(containerId);
   if (!c) return;
+
   c.innerHTML = '';
+
   FESTIVE_POS.forEach(([x, y], i) => {
     const el = document.createElement('div');
     el.className = 'c-confetti';
-    el.style.cssText = `left:${x}%;top:${y}%;width:${Math.random() * 8 + 5}px;height:${Math.random() * 8 + 5}px;background:${Math.random() > .5 ? colorA : colorB};animation-delay:${i * .16}s;animation-duration:${2 + Math.random() * 2}s;`;
+    el.style.cssText = `
+      left:${x}%;
+      top:${y}%;
+      width:${Math.random() * 8 + 5}px;
+      height:${Math.random() * 8 + 5}px;
+      background:${Math.random() > 0.5 ? colorA : colorB};
+      animation-delay:${i * 0.16}s;
+      animation-duration:${2 + Math.random() * 2}s;
+    `;
     c.appendChild(el);
   });
 }
@@ -125,18 +149,31 @@ function generateClub() {
 function generateGeneral() {
   const name = requireName('nameB');
   if (!name) return;
+
   document.getElementById('outName2').textContent = name;
   buildFestiveDecor('gen1Decor', '#ffffff', 'rgba(80,230,255,.9)');
   showResult('genCard1');
 }
 
 function showResult(visibleId) {
-  ['step1', 'step2A', 'step2B'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  ['clubCard', 'genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  document.getElementById(visibleId).classList.remove('hidden');
+  ['step1', 'step2A', 'step2B'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+
+  ['clubCard', 'genCard1'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+
+  const visible = document.getElementById(visibleId);
+  if (visible) visible.classList.remove('hidden');
+
   const section = document.getElementById('resultSection');
-  section.classList.remove('hidden');
-  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  if (section) {
+    section.classList.remove('hidden');
+    setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -166,7 +203,7 @@ function loadImage(src) {
         const reader = new FileReader();
         reader.onloadend = () => {
           const img = new Image();
-          img.onload  = () => resolve(img);
+          img.onload = () => resolve(img);
           img.onerror = () => resolve(null);
           img.src = reader.result;
         };
@@ -202,13 +239,13 @@ function escapeXML(str) {
 
 // رسم النص العربي — data URL آمن لكل المتصفحات
 function arabicTextToImage(text, opts = {}) {
-  const fontSize   = opts.fontSize   || 48;
-  const color      = opts.color      || '#ffffff';
+  const fontSize = opts.fontSize || 48;
+  const color = opts.color || '#ffffff';
   const fontFamily = opts.fontFamily || 'Cairo, Tajawal, sans-serif';
   const fontWeight = opts.fontWeight || '700';
-  const canvasW    = opts.width      || 900;
-  const canvasH    = opts.height     || Math.ceil(fontSize * 1.8);
-  const safeText   = escapeXML(text);
+  const canvasW = opts.width || 900;
+  const canvasH = opts.height || Math.ceil(fontSize * 1.8);
+  const safeText = escapeXML(text);
 
   const html = `<div xmlns="http://www.w3.org/1999/xhtml"
     style="width:${canvasW}px;height:${canvasH}px;
@@ -223,12 +260,11 @@ function arabicTextToImage(text, opts = {}) {
     <foreignObject width="${canvasW}" height="${canvasH}">${html}</foreignObject>
   </svg>`;
 
-  // data URL بدل createObjectURL — يحل مشكلة iOS Safari
   const encoded = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 
   return new Promise(resolve => {
     const img = new Image();
-    img.onload  = () => resolve(img);
+    img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
     img.src = encoded;
   });
@@ -240,6 +276,7 @@ function arabicTextToImage(text, opts = {}) {
 
 async function ensureHtml2Canvas() {
   if (window.html2canvas) return window.html2canvas;
+
   await new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
@@ -247,6 +284,7 @@ async function ensureHtml2Canvas() {
     script.onerror = reject;
     document.head.appendChild(script);
   });
+
   return window.html2canvas;
 }
 
@@ -276,10 +314,12 @@ async function captureVisibleCardCanvas(cardEl) {
     onclone: (clonedDoc) => {
       const clonedCard = clonedDoc.getElementById(cardEl.id);
       if (!clonedCard) return;
+
       clonedDoc.querySelectorAll('*').forEach(el => {
         el.style.animationPlayState = 'paused';
         el.style.caretColor = 'transparent';
       });
+
       clonedCard.style.transform = 'none';
       clonedCard.style.filter = 'none';
       clonedCard.style.margin = '0';
@@ -288,7 +328,7 @@ async function captureVisibleCardCanvas(cardEl) {
 }
 
 // ══════════════════════════════════════════════
-//  رسم Club Card — مطابق للموقع بالضبط
+//  رسم Club Card
 // ══════════════════════════════════════════════
 
 async function drawClubCard() {
@@ -327,12 +367,14 @@ async function drawClubCard() {
   // ── الشبكة ─────────────────────────────
   ctx.strokeStyle = 'rgba(255,255,255,0.022)';
   ctx.lineWidth = 1;
+
   for (let x = 70; x < S - 70; x += 48) {
     ctx.beginPath();
     ctx.moveTo(x, 120);
     ctx.lineTo(x, S - 190);
     ctx.stroke();
   }
+
   for (let y = 120; y < S - 190; y += 48) {
     ctx.beginPath();
     ctx.moveTo(70, y);
@@ -408,6 +450,7 @@ async function drawClubCard() {
     width: 300,
     height: 36
   });
+
   if (arHeadImg) {
     ctx.drawImage(arHeadImg, S * 0.30, 55, 300, 36);
   }
@@ -418,18 +461,21 @@ async function drawClubCard() {
     ctx.save();
     ctx.strokeStyle = 'rgba(255,255,255,0.58)';
     ctx.lineWidth = 3;
+
     const rays = [
       [34, -30],
       [48, -12],
       [60, 6],
       [72, 24]
     ];
+
     rays.forEach(([dx, dy]) => {
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx + dir * dx, cy + dy);
       ctx.stroke();
     });
+
     ctx.restore();
   }
 
@@ -444,6 +490,7 @@ async function drawClubCard() {
 
     let dW = maxW;
     let dH = dW / natR;
+
     if (dH > maxH) {
       dH = maxH;
       dW = dH * natR;
@@ -475,6 +522,7 @@ async function drawClubCard() {
     width: 430,
     height: 58
   });
+
   if (greetImg) {
     ctx.drawImage(greetImg, (S - 430) / 2, greetY - 28, 430, 58);
   }
@@ -518,6 +566,7 @@ async function drawClubCard() {
     width: bdgW,
     height: 46
   });
+
   if (nameImg) {
     ctx.drawImage(nameImg, bdgX, bdgY + 9, bdgW, 46);
   }
@@ -530,6 +579,7 @@ async function drawClubCard() {
       width: bdgW,
       height: 30
     });
+
     if (roleImg) {
       ctx.drawImage(roleImg, bdgX, bdgY + 49, bdgW, 30);
     }
@@ -551,6 +601,7 @@ async function drawClubCard() {
     width: 390,
     height: 26
   });
+
   if (footerImg) {
     ctx.drawImage(footerImg, (S - 390) / 2 - 10, footerY - 15, 390, 26);
   }
@@ -567,6 +618,133 @@ async function drawClubCard() {
 }
 
 // ══════════════════════════════════════════════
+//  رسم General Card
+// ══════════════════════════════════════════════
+
+async function drawGeneralCard() {
+  const W = 900;
+  const H = 1200;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const bgImg = await loadImage('image/eid.png');
+
+  if (bgImg) {
+    ctx.drawImage(bgImg, 0, 0, W, H);
+  } else {
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, '#881c3c');
+    g.addColorStop(1, '#d24a73');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  const ov = ctx.createLinearGradient(0, H * 0.5, 0, H);
+  ov.addColorStop(0, 'rgba(0,0,0,0.05)');
+  ov.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = ov;
+  ctx.fillRect(0, 0, W, H);
+
+  const name = document.getElementById('outName2').textContent.trim();
+  const bW = Math.min(W * 0.82, 700);
+  const bH = 130;
+  const bX = (W - bW) / 2;
+  const bY = H * 0.72 - bH / 2;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  roundRect(ctx, bX, bY, bW, bH, 40);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+  ctx.lineWidth = 2.5;
+  roundRect(ctx, bX, bY, bW, bH, 40);
+  ctx.stroke();
+
+  const nameImg = await arabicTextToImage(name, {
+    fontSize: 54,
+    color: '#ffffff',
+    fontFamily: 'Cairo, Tajawal, sans-serif',
+    fontWeight: '900',
+    width: bW,
+    height: bH
+  });
+
+  if (nameImg) {
+    ctx.drawImage(nameImg, bX, bY, bW, bH);
+  }
+
+  return canvas;
+}
+
+// ══════════════════════════════════════════════
+//  عرض الصورة للحفظ (iOS)
+// ══════════════════════════════════════════════
+
+function showImagePreviewForSave(dataURL) {
+  let overlay = document.getElementById('savePreviewOverlay');
+
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'savePreviewOverlay';
+    overlay.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:rgba(3,10,25,0.96);
+      z-index:999999;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      box-sizing:border-box;
+      gap:16px;
+    `;
+
+    overlay.innerHTML = `
+      <div style="color:#fff;text-align:center;line-height:1.9;font-size:15px;max-width:320px;">
+        اضغطي مطولًا على الصورة ثم اختاري <b>حفظ الصورة</b>
+      </div>
+      <img id="savePreviewImage" alt="بطاقة المعايدة" style="
+        max-width:92vw;
+        max-height:68vh;
+        width:auto;
+        height:auto;
+        border-radius:18px;
+        box-shadow:0 12px 40px rgba(0,0,0,.35);
+        display:block;
+      ">
+      <button id="closeSavePreviewBtn" style="
+        border:none;
+        border-radius:14px;
+        padding:12px 22px;
+        font-size:15px;
+        font-weight:700;
+        background:#FFB900;
+        color:#111;
+        cursor:pointer;
+      ">إغلاق</button>
+    `;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#closeSavePreviewBtn').addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+  }
+
+  overlay.querySelector('#savePreviewImage').src = dataURL;
+  overlay.style.display = 'flex';
+}
+
+// ══════════════════════════════════════════════
 //  Download
 // ══════════════════════════════════════════════
 
@@ -574,11 +752,12 @@ async function downloadCard() {
   const card = ['clubCard', 'genCard1']
     .map(id => document.getElementById(id))
     .find(el => el && !el.classList.contains('hidden'));
+
   if (!card) return;
 
   const btn = document.getElementById('dlBtn');
   btn.innerHTML = 'جاري التحميل...';
-  btn.disabled  = true;
+  btn.disabled = true;
 
   try {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
@@ -588,12 +767,10 @@ async function downloadCard() {
     let canvas;
 
     if (isIOS) {
-      // iOS: نرسم يدوياً (canvas API) لتفادي مشكلة tainted canvas
       canvas = card.id === 'clubCard'
         ? await drawClubCard()
         : await drawGeneralCard();
     } else {
-      // غير iOS: نحاول html2canvas أولاً (يطابق الموقع)، وإلا نرجع للرسم اليدوي
       try {
         canvas = await captureVisibleCardCanvas(card);
       } catch (err) {
@@ -620,14 +797,14 @@ async function downloadCard() {
     btn.innerHTML = '<span>✅</span> <span>تم!</span>';
     setTimeout(() => {
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-      btn.disabled  = false;
+      btn.disabled = false;
     }, 2200);
 
   } catch (err) {
     console.error(err);
     alert('حدث خطأ: ' + err.message);
     btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-    btn.disabled  = false;
+    btn.disabled = false;
   }
 }
 
@@ -638,150 +815,34 @@ async function downloadCard() {
 function createFloatingShapes() {
   const container = document.getElementById('floatingShapes');
   if (!container) return;
-  const colors = ['#0078D4','#50E6FF','#FFB900','#7FBA00'];
-  const shapes = ['◆','✦','●','▪'];
+
+  const colors = ['#0078D4', '#50E6FF', '#FFB900', '#7FBA00'];
+  const shapes = ['◆', '✦', '●', '▪'];
+
   for (let i = 0; i < 18; i++) {
     const el = document.createElement('div');
     el.className = 'float-shape';
-    const size = Math.random()*12+4, useEmoji = Math.random()>0.5;
-    el.style.cssText = `left:${Math.random()*100}%;bottom:-60px;width:${size}px;height:${size}px;${useEmoji?`color:${colors[Math.floor(Math.random()*colors.length)]};font-size:${size}px;`:`background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'3px'};transform:rotate(45deg);`}animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*12}s;`;
-    if (useEmoji) el.textContent = shapes[Math.floor(Math.random()*shapes.length)];
-    container.appendChild(el);
-  }
-}
 
-function initParticleCanvas() {
-  const canvas = document.getElementById('particleCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W = window.innerWidth, H = window.innerHeight;
-  canvas.width = W; canvas.height = H;
-  window.addEventListener('resize', () => {
-    W = window.innerWidth; H = window.innerHeight;
-    canvas.width = W; canvas.height = H;
-  });
-  const particles = [];
-  for (let i = 0; i < 30; i++) {
-    particles.push({
-      x: Math.random()*W, y: Math.random()*H,
-      r: Math.random()*1.5+0.5,
-      speedX: (Math.random()-0.5)*0.3,
-      speedY: (Math.random()-0.5)*0.3,
-      alpha: Math.random()*0.5+0.1,
-      color: Math.random()>0.5?'#50E6FF':'#FFB900'
-    });
-  }
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    particles.forEach(p => {
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha; ctx.fill();
-      p.x += p.speedX; p.y += p.speedY;
-      if (p.x<0||p.x>W) p.speedX *= -1;
-      if (p.y<0||p.y>H) p.speedY *= -1;
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
-}
+    const size = Math.random() * 12 + 4;
+    const useEmoji = Math.random() > 0.5;
 
-document.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    if (!document.getElementById('step2A').classList.contains('hidden')) generateClub();
-    else if (!document.getElementById('step2B').classList.contains('hidden')) generateGeneral();
-  }
-});
-
-const shakeStyle = document.createElement('style');
-shakeStyle.textContent = `
-  @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
-  .input-error{animation:shake .35s ease both !important;}
-`;
-document.head.appendChild(shakeStyle);
-
-createFloatingShapes();
-initParticleCanvas(); 
-
-// ══════════════════════════════════════════════
-//  Download
-// ══════════════════════════════════════════════
-
-async function downloadCard() {
-  const card = ['clubCard', 'genCard1']
-    .map(id => document.getElementById(id))
-    .find(el => el && !el.classList.contains('hidden'));
-  if (!card) return;
-
-  const btn = document.getElementById('dlBtn');
-  btn.innerHTML = 'جاري التحميل...';
-  btn.disabled  = true;
-
-  try {
-    if (document.fonts && document.fonts.ready) await document.fonts.ready;
-    await wait(350);
-
-    const isIOS = isIOSDevice();
-    let canvas;
-
-    if (isIOS) {
-      // iOS: نرسم يدوياً (canvas API) لتفادي مشكلة tainted canvas
-      canvas = card.id === 'clubCard'
-        ? await drawClubCard()
-        : await drawGeneralCard();
-    } else {
-      // غير iOS: نحاول html2canvas أولاً (يطابق الموقع)، وإلا نرجع للرسم اليدوي
-      try {
-        canvas = await captureVisibleCardCanvas(card);
-      } catch (err) {
-        console.warn('html2canvas failed, using manual draw:', err);
-        canvas = card.id === 'clubCard'
-          ? await drawClubCard()
-          : await drawGeneralCard();
+    el.style.cssText = `
+      left:${Math.random() * 100}%;
+      bottom:-60px;
+      width:${size}px;
+      height:${size}px;
+      ${useEmoji
+        ? `color:${colors[Math.floor(Math.random() * colors.length)]};font-size:${size}px;`
+        : `background:${colors[Math.floor(Math.random() * colors.length)]};border-radius:${Math.random() > 0.5 ? '50%' : '3px'};transform:rotate(45deg);`
       }
+      animation-duration:${Math.random() * 12 + 8}s;
+      animation-delay:${Math.random() * 12}s;
+    `;
+
+    if (useEmoji) {
+      el.textContent = shapes[Math.floor(Math.random() * shapes.length)];
     }
 
-    const dataURL = canvas.toDataURL('image/png');
-
-    if (isIOS) {
-      showImagePreviewForSave(dataURL);
-    } else {
-      const link = document.createElement('a');
-      link.download = 'mlsac-eid-1447.png';
-      link.href = dataURL;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    }
-
-    btn.innerHTML = '<span>✅</span> <span>تم!</span>';
-    setTimeout(() => {
-      btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-      btn.disabled  = false;
-    }, 2200);
-
-  } catch (err) {
-    console.error(err);
-    alert('حدث خطأ: ' + err.message);
-    btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-    btn.disabled  = false;
-  }
-}
-
-// ══════════════════════════════════════════════
-//  Floating shapes + Particles
-// ══════════════════════════════════════════════
-
-function createFloatingShapes() {
-  const container = document.getElementById('floatingShapes');
-  if (!container) return;
-  const colors = ['#0078D4','#50E6FF','#FFB900','#7FBA00'];
-  const shapes = ['◆','✦','●','▪'];
-  for (let i = 0; i < 18; i++) {
-    const el = document.createElement('div');
-    el.className = 'float-shape';
-    const size = Math.random()*12+4, useEmoji = Math.random()>0.5;
-    el.style.cssText = `left:${Math.random()*100}%;bottom:-60px;width:${size}px;height:${size}px;${useEmoji?`color:${colors[Math.floor(Math.random()*colors.length)]};font-size:${size}px;`:`background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'3px'};transform:rotate(45deg);`}animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*12}s;`;
-    if (useEmoji) el.textContent = shapes[Math.floor(Math.random()*shapes.length)];
     container.appendChild(el);
   }
 }
@@ -789,49 +850,81 @@ function createFloatingShapes() {
 function initParticleCanvas() {
   const canvas = document.getElementById('particleCanvas');
   if (!canvas) return;
+
   const ctx = canvas.getContext('2d');
-  let W = window.innerWidth, H = window.innerHeight;
-  canvas.width = W; canvas.height = H;
+  let W = window.innerWidth;
+  let H = window.innerHeight;
+
+  canvas.width = W;
+  canvas.height = H;
+
   window.addEventListener('resize', () => {
-    W = window.innerWidth; H = window.innerHeight;
-    canvas.width = W; canvas.height = H;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
   });
+
   const particles = [];
   for (let i = 0; i < 30; i++) {
     particles.push({
-      x: Math.random()*W, y: Math.random()*H,
-      r: Math.random()*1.5+0.5,
-      speedX: (Math.random()-0.5)*0.3,
-      speedY: (Math.random()-0.5)*0.3,
-      alpha: Math.random()*0.5+0.1,
-      color: Math.random()>0.5?'#50E6FF':'#FFB900'
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.5 + 0.5,
+      speedX: (Math.random() - 0.5) * 0.3,
+      speedY: (Math.random() - 0.5) * 0.3,
+      alpha: Math.random() * 0.5 + 0.1,
+      color: Math.random() > 0.5 ? '#50E6FF' : '#FFB900'
     });
   }
+
   function draw() {
     ctx.clearRect(0, 0, W, H);
+
     particles.forEach(p => {
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha; ctx.fill();
-      p.x += p.speedX; p.y += p.speedY;
-      if (p.x<0||p.x>W) p.speedX *= -1;
-      if (p.y<0||p.y>H) p.speedY *= -1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+
+      p.x += p.speedX;
+      p.y += p.speedY;
+
+      if (p.x < 0 || p.x > W) p.speedX *= -1;
+      if (p.y < 0 || p.y > H) p.speedY *= -1;
     });
+
     requestAnimationFrame(draw);
   }
+
   draw();
 }
 
 document.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
-    if (!document.getElementById('step2A').classList.contains('hidden')) generateClub();
-    else if (!document.getElementById('step2B').classList.contains('hidden')) generateGeneral();
+    if (!document.getElementById('step2A').classList.contains('hidden')) {
+      generateClub();
+    } else if (!document.getElementById('step2B').classList.contains('hidden')) {
+      generateGeneral();
+    }
   }
 });
 
 const shakeStyle = document.createElement('style');
 shakeStyle.textContent = `
-  @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
-  .input-error{animation:shake .35s ease both !important;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    15%{transform:translateX(-8px)}
+    30%{transform:translateX(8px)}
+    45%{transform:translateX(-6px)}
+    60%{transform:translateX(6px)}
+    75%{transform:translateX(-3px)}
+    90%{transform:translateX(3px)}
+  }
+  .input-error{
+    animation:shake .35s ease both !important;
+  }
 `;
 document.head.appendChild(shakeStyle);
 
