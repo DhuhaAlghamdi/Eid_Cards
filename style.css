@@ -1,5 +1,5 @@
 /* =============================================
-   MLSAC Eid Generator — style.css  (v2)
+   MLSAC Eid Generator — style.css
    ============================================= */
 
 :root {
@@ -40,7 +40,6 @@ body {
   color: var(--white);
 }
 
-/* Deep space gradient background */
 body::before {
   content: '';
   position: fixed;
@@ -54,7 +53,6 @@ body::before {
   z-index: 0;
 }
 
-/* Star field */
 body::after {
   content: '';
   position: fixed;
@@ -82,7 +80,6 @@ body::after {
   100% { opacity: 1; }
 }
 
-/* Particle canvas */
 #particleCanvas {
   position: fixed;
   inset: 0;
@@ -208,7 +205,6 @@ body::after {
   gap: 0;
 }
 
-/* Background orbs */
 .hero-bg-orbs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 
 .orb {
@@ -245,13 +241,13 @@ body::after {
   66% { transform: translate(-8px, 8px) scale(0.95); }
 }
 
-/* Decorative images */
 .hero-decor {
   position: absolute;
   pointer-events: none;
   z-index: 3;
   height: auto;
 }
+
 .hero-fireworks-right {
   right: 4%;
   top: 4%;
@@ -269,27 +265,16 @@ body::after {
   transform: scaleX(-1);
 }
 
-
-.hero-fireworks {
-  right: 4%;
-  top: 4%;
-  width: 90px;
-  opacity: 0.9;
-  animation: sparkle 3s ease-in-out infinite;
-}
-
-@keyframes floatBalloon {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50%  { transform: translateY(-14px) rotate(2deg); }
-}
-
 @keyframes sparkle {
   0%, 100% { transform: scale(0.88); opacity: .65; }
   50%  { transform: scale(1.12); opacity: 1; }
 }
 
+.hero-fireworks-left {
+  transform: scaleX(-1);
+}
+.hero-fireworks-left:hover { transform: scaleX(-1); }
 
-/* Hero title */
 .hero-eid {
   font-family: "Aref Ruqaa", serif;
   position: relative;
@@ -325,7 +310,6 @@ body::after {
   100% { text-shadow: 0 0 50px rgba(80,230,255,.6), 0 2px 0 rgba(0,0,0,.3); }
 }
 
-/* Divider */
 .hero-divider-line {
   display: flex;
   align-items: center;
@@ -416,7 +400,6 @@ body::after {
   letter-spacing: 1px;
 }
 
-/* ── Template selector ── */
 .main-template-grid {
   display: flex;
   flex-direction: column;
@@ -485,9 +468,7 @@ body::after {
   transition: left .4s;
 }
 
-.main-opt:hover .preview-shine {
-  left: 100px;
-}
+.main-opt:hover .preview-shine { left: 100px; }
 
 .blue-prev { background: linear-gradient(135deg, #001a5c, #0055cc); }
 .general-prev { background: linear-gradient(135deg, #881c3c, #d24a73); }
@@ -540,9 +521,7 @@ body::after {
 }
 
 /* ── Input groups ── */
-.input-group {
-  margin-bottom: 16px;
-}
+.input-group { margin-bottom: 16px; }
 
 .input-label {
   display: flex;
@@ -710,9 +689,7 @@ body::after {
   animation: fadeUp .5s ease both;
 }
 
-.result-header {
-  text-align: center;
-}
+.result-header { text-align: center; }
 
 .result-success-badge {
   display: inline-flex;
@@ -793,13 +770,9 @@ body::after {
   transition: transform .3s;
 }
 
-.greeting-card:hover {
-  transform: scale(1.01);
-}
+.greeting-card:hover { transform: scale(1.01); }
 
-.card-gen {
-  aspect-ratio: 3 / 4;
-}
+.card-gen { aspect-ratio: 3 / 4; }
 
 .c-confetti {
   position: absolute;
@@ -810,291 +783,7 @@ body::after {
 }
 
 /* ══════════════════════════════════════════
-   CLUB CARD
-══════════════════════════════════════════ */
-.club-texture {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 30% 0%, rgba(80,230,255,.12), transparent 50%),
-    radial-gradient(ellipse at 70% 100%, rgba(0,120,212,.2), transparent 50%),
-    radial-gradient(circle at 90% 20%, rgba(255,255,255,.06), transparent 30%),
-    linear-gradient(160deg, #041530 0%, #0a2568 35%, #0d5bc9 70%, #1a78e8 100%);
-}
-
-/* Subtle mesh pattern */
-.club-texture::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-.club-shimmer {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 20%,
-    rgba(255,255,255,.04) 50%,
-    transparent 80%
-  );
-  animation: cardShimmer 6s ease-in-out infinite;
-}
-
-@keyframes cardShimmer {
-  0% { transform: translateX(-100%) skewX(-10deg); }
-  100% { transform: translateX(200%) skewX(-10deg); }
-}
-
-/* Corner decorations */
-.corner-burst {
-  position: absolute;
-  width: 100px;
-  height: 100px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.corner-burst::before,
-.corner-burst::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    rgba(255,255,255,0) 0 8deg,
-    rgba(255,255,255,.9) 8deg 12deg,
-    rgba(255,255,255,0) 12deg 22deg,
-    rgba(255,255,255,.8) 22deg 26deg,
-    rgba(255,255,255,0) 26deg 36deg,
-    rgba(255,255,255,.92) 36deg 40deg,
-    rgba(255,255,255,0) 40deg 50deg,
-    rgba(255,255,255,.75) 50deg 54deg,
-    rgba(255,255,255,0) 54deg 64deg,
-    rgba(255,255,255,.88) 64deg 68deg,
-    rgba(255,255,255,0) 68deg 360deg
-  );
-  filter: drop-shadow(0 0 10px rgba(80,230,255,.4));
-  animation: burstPulse 3.5s ease-in-out infinite;
-}
-
-.corner-burst::after {
-  transform: scale(.6) rotate(20deg);
-  opacity: .5;
-}
-
-.burst-left { top: 10px; left: 10px; }
-.burst-right { top: 10px; right: 10px; transform: scaleX(-1); }
-
-@keyframes burstPulse {
-  0%, 100% { transform: scale(.9); opacity: .7; }
-  50% { transform: scale(1.06); opacity: 1; }
-}
-
-/* Club top bar */
-.club-top {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px 20px 14px;
-  background: linear-gradient(rgba(0,10,38,.8), transparent);
-  border-bottom: 1px solid rgba(255,255,255,.1);
-  z-index: 4;
-}
-
-.club-logo-img {
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(80,230,255,.3));
-}
-
-.club-top-text { text-align: right; }
-
-.club-en-name {
-  color: var(--white);
-  font-size: clamp(9px,2.4vw,13px);
-  font-weight: 800;
-  letter-spacing: .5px;
-}
-
-.club-ar-name {
-  color: var(--cyan);
-  font-size: clamp(8px,2vw,11px);
-  font-weight: 600;
-  letter-spacing: .3px;
-  opacity: .85;
-  margin-top: 2px;
-}
-
-/* Stars layer */
-.club-stars-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.club-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 8px;
-  padding: 85px 20px 60px;
-  width: 100%;
-  left: 0;
-  z-index: 3;
-}
-
-.club-badge {
-  position: relative;
-  left: auto;
-  bottom: auto;
-  top: auto;
-  transform: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255,255,255,.22);
-  backdrop-filter: none;
-  border: 1.5px solid rgba(255,255,255,.25);
-  box-shadow: 0 10px 30px rgba(0,0,0,.2);
-  white-space: nowrap;
-  padding: 8px 20px 4px 20px;
-  max-width: 260px;
-  height: 70px;
-  border-radius: 12px;
-  z-index: 4;
-  
-}
-
-
-.club-eid {
-  width: 70%;
-  filter: drop-shadow(0 8px 24px rgba(0,0,0,.3));
-}
-
-.club-kol-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.kol-star {
-  color: var(--gold);
-  font-size: 14px;
-  animation: starSpin 5s linear infinite;
-}
-
-.club-kol {
-  font-size: clamp(14px,3.5vw,20px);
-  color: rgba(255,255,255,.95);
-  opacity: 1;
-  font-weight: 700;
-  text-shadow: 0 2px 12px rgba(0,0,0,.3);
-}
-
-
-
-.badge-glow-ring {
-  position: absolute;
-  inset: -3px;
-  border-radius: 23px;
-  border: 1px solid rgba(80,230,255,.3);
-  animation: badgeGlow 3s ease-in-out infinite;
-}
-
-@keyframes badgeGlow {
-  0%, 100% { opacity: .4; }
-  50% { opacity: 1; box-shadow: 0 0 16px rgba(80,230,255,.3); }
-}
-
-/* وثبتي هذا في CSS الأساسي */
-
-.b-info{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:0;
-  line-height:1;
-}
-
-/* وثبتي هذا في CSS الأساسي */
-
-.b-name{
-font-family:'Amiri',serif;
-font-weight:400;
-color:var(--white);
-font-size:clamp(20px,4vw,30px);
-line-height:1;
-margin:0;
-}
-
-.b-role{
-font-family:'Amiri',serif;
-font-weight:700;   /* Bold */
-color:var(--cyan);
-font-size:clamp(12px,2.5vw,16px);
-line-height:1;
-margin-top:3px;
-}
-
-.b-role.show { display: block; }
-
-/* Club footer */
-.club-footer {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 6px 20px 10px;
-  background: linear-gradient(transparent, rgba(0,0,0,.3));
-  z-index: 4;
-}
-
-.footer-logo-img {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-  opacity: .8;
-}
-
-.footer-divider-dot {
-  color: rgba(255,255,255,.3);
-  font-size: 14px;
-}
-
-.footer-txt {
-  color: rgba(255,255,255,.75);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-}
-
-.footer-txt-ar {
-  color: rgba(255,255,255,.55);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .5px;
-}
-
-/* ══════════════════════════════════════════
-   GENERAL CARD
+   SHARED: background image + overlay
 ══════════════════════════════════════════ */
 .gen-bg-img {
   position: absolute;
@@ -1118,6 +807,51 @@ margin-top:3px;
   z-index: 2;
 }
 
+/* ══════════════════════════════════════════
+   CLUB CARD — Name Badge (مطابق للبطاقة العامة)
+══════════════════════════════════════════ */
+.club1-name-badge {
+  position: absolute;
+  bottom: auto;
+  top: 72%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  max-width: 85%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 22px;
+  padding: 14px 28px;
+  text-align: center;
+  z-index: 3;
+  white-space: nowrap;
+}
+
+.club1-name {
+  color: var(--white);
+  font-size: clamp(14px, 3.5vw, 20px);   /* ← كان 22px–30px */
+  font-weight: 900;
+  direction: rtl;
+  line-height: 1.2;
+  text-shadow: 0 2px 12px rgba(0,0,0,.4);
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+}
+
+.club1-role {
+  color: var(--cyan);
+  font-size: clamp(10px, 2vw, 13px);     /* ← كان 13px–17px */
+  font-weight: 700;
+  direction: rtl;
+  margin-top: 4px;
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  display: none;
+}
+
+
+/* ══════════════════════════════════════════
+   GENERAL CARD — Name Badge
+══════════════════════════════════════════ */
 .gen1-name-badge {
   position: absolute;
   bottom: auto;
@@ -1126,28 +860,19 @@ margin-top:3px;
   transform: translateX(-50%);
   width: auto;
   max-width: 85%;
-  background: rgba(0,0,0,.45);
-  backdrop-filter: none;
-  border: 1.5px solid rgba(255,255,255,.28);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   border-radius: 22px;
   padding: 14px 28px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.12);
   text-align: center;
   z-index: 3;
-}
-
-.gen-badge-top {
-  color: var(--gold);
-  font-size: clamp(11px,2.5vw,14px);
-  font-weight: 700;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-  opacity: .9;
+  white-space: nowrap;
 }
 
 .gen1-name {
   color: var(--white);
-  font-size: clamp(22px,5.5vw,30px);
+  font-size: clamp(14px, 3.5vw, 20px);   /* ← كان 22px–30px */
   font-weight: 900;
   direction: rtl;
   line-height: 1.2;
@@ -1155,13 +880,8 @@ margin-top:3px;
   font-family: 'Cairo', 'Tajawal', sans-serif;
 }
 
-.gen-badge-bottom {
-  color: rgba(255,255,255,.65);
-  font-size: clamp(10px,2.2vw,13px);
-  font-weight: 500;
-  margin-top: 5px;
-  letter-spacing: .5px;
-}
+.club1-role.show { display: block; }
+
 
 /* ══════════════════════════════════════════
    FLOATING SHAPES
@@ -1239,10 +959,7 @@ margin-top:3px;
   backdrop-filter: blur(10px);
 }
 
-.social-link svg {
-  width: 20px;
-  height: 20px;
-}
+.social-link svg { width: 20px; height: 20px; }
 
 .social-link:hover {
   background: rgba(80,230,255,.12);
@@ -1343,11 +1060,8 @@ margin-top:3px;
   .step-card { padding: 18px 16px; }
   .field-input { font-size: 16px; }
   .gen-btn, .back-btn, .dl-btn { min-height: 50px; }
-  .corner-burst { width: 80px; height: 80px; }
-  .club-center { padding: 78px 16px 124px; }
-  .club-badge { padding: 12px 22px; }
-  .hero-balloons { width: 120px; }
-  .hero-fireworks { width: 75px; }
+  .club1-name { font-size: 20px; }
+  .gen1-name  { font-size: 20px; }
 }
 
 @media (max-width: 340px) {
