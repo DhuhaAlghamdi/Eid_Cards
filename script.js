@@ -303,393 +303,267 @@ async function drawClubCard() {
     loadImage('image/happyeid.png')
   ]);
 
-  // ───────────────────────────────────────────
-  // Background
-  // ───────────────────────────────────────────
-  const bg = ctx.createLinearGradient(0, 0, S * 0.72, S);
-  bg.addColorStop(0, '#03142f');
-  bg.addColorStop(0.28, '#0a2568');
-  bg.addColorStop(0.67, '#0f5fce');
-  bg.addColorStop(1, '#1d84f2');
+  // ── الخلفية ─────────────────────────────
+  const bg = ctx.createLinearGradient(0, 0, S * 0.6, S);
+  bg.addColorStop(0, '#041530');
+  bg.addColorStop(0.35, '#0a2568');
+  bg.addColorStop(0.70, '#0d5bc9');
+  bg.addColorStop(1, '#1a78e8');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, S, S);
 
-  const glow1 = ctx.createRadialGradient(S * 0.52, S * 0.45, 0, S * 0.52, S * 0.45, S * 0.58);
-  glow1.addColorStop(0, 'rgba(80,230,255,0.10)');
-  glow1.addColorStop(1, 'transparent');
-  ctx.fillStyle = glow1;
+  const r1 = ctx.createRadialGradient(S * 0.3, 0, 0, S * 0.3, 0, S * 0.55);
+  r1.addColorStop(0, 'rgba(80,230,255,0.13)');
+  r1.addColorStop(1, 'transparent');
+  ctx.fillStyle = r1;
   ctx.fillRect(0, 0, S, S);
 
-  const glow2 = ctx.createRadialGradient(S * 0.5, S * 0.9, 0, S * 0.5, S * 0.9, S * 0.45);
-  glow2.addColorStop(0, 'rgba(255,255,255,0.08)');
-  glow2.addColorStop(1, 'transparent');
-  ctx.fillStyle = glow2;
+  const r2 = ctx.createRadialGradient(S * 0.7, S, 0, S * 0.7, S, S * 0.55);
+  r2.addColorStop(0, 'rgba(0,120,212,0.18)');
+  r2.addColorStop(1, 'transparent');
+  ctx.fillStyle = r2;
   ctx.fillRect(0, 0, S, S);
 
-  // grid المنطقة الوسطى فقط
-  const gridTop = S * 0.12;
-  const gridBottom = S * 0.84;
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  // ── الشبكة ─────────────────────────────
+  ctx.strokeStyle = 'rgba(255,255,255,0.022)';
   ctx.lineWidth = 1;
-
-  for (let x = 48; x < S - 48; x += 42) {
+  for (let x = 70; x < S - 70; x += 48) {
     ctx.beginPath();
-    ctx.moveTo(x, gridTop);
-    ctx.lineTo(x, gridBottom);
+    ctx.moveTo(x, 120);
+    ctx.lineTo(x, S - 190);
+    ctx.stroke();
+  }
+  for (let y = 120; y < S - 190; y += 48) {
+    ctx.beginPath();
+    ctx.moveTo(70, y);
+    ctx.lineTo(S - 70, y);
     ctx.stroke();
   }
 
-  for (let y = gridTop; y < gridBottom; y += 42) {
-    ctx.beginPath();
-    ctx.moveTo(48, y);
-    ctx.lineTo(S - 48, y);
-    ctx.stroke();
-  }
-
-  // Stars
+  // ── نجوم ثابتة ──────────────────────────
   const stars = [
-    [0.065, 0.155, '✦', 10, 0.22],
-    [0.91, 0.15, '✦', 9, 0.18],
-    [0.12, 0.28, '✧', 10, 0.28],
-    [0.87, 0.29, '✧', 9, 0.24],
-    [0.15, 0.47, '✦', 10, 0.30],
-    [0.83, 0.48, '✦', 8, 0.22],
-    [0.20, 0.73, '✧', 9, 0.20],
-    [0.76, 0.76, '✧', 9, 0.20],
-    [0.49, 0.92, '✦', 8, 0.18],
-    [0.62, 0.18, '✧', 8, 0.18]
+    [0.10, 0.18, '✦', 0.18, 10],
+    [0.17, 0.28, '✧', 0.18, 9],
+    [0.86, 0.17, '✦', 0.18, 10],
+    [0.82, 0.28, '✧', 0.18, 9],
+    [0.15, 0.53, '✦', 0.20, 10],
+    [0.84, 0.53, '✦', 0.20, 10],
+    [0.38, 0.44, '✧', 0.15, 8],
+    [0.65, 0.44, '✧', 0.15, 8],
+    [0.33, 0.82, '✧', 0.14, 8],
+    [0.50, 0.92, '✦', 0.16, 9],
+    [0.70, 0.82, '✧', 0.14, 8]
   ];
 
-  stars.forEach(([xr, yr, char, size, alpha]) => {
+  stars.forEach(([xr, yr, ch, alpha, size]) => {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = '#ffffff';
     ctx.font = `${size}px serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(char, xr * S, yr * S);
+    ctx.fillText(ch, xr * S, yr * S);
     ctx.restore();
   });
 
-  // ───────────────────────────────────────────
-  // Header
-  // ───────────────────────────────────────────
-  const hdrH = S * 0.105;
-
-  const hdrGrad = ctx.createLinearGradient(0, 0, 0, hdrH * 1.35);
-  hdrGrad.addColorStop(0, 'rgba(0,8,28,0.96)');
-  hdrGrad.addColorStop(1, 'rgba(0,8,28,0)');
+  // ── الهيدر ──────────────────────────────
+  const hdrH = S * 0.115;
+  const hdrGrad = ctx.createLinearGradient(0, 0, 0, hdrH * 1.5);
+  hdrGrad.addColorStop(0, 'rgba(0,8,30,0.90)');
+  hdrGrad.addColorStop(1, 'rgba(0,8,30,0)');
   ctx.fillStyle = hdrGrad;
   ctx.fillRect(0, 0, S, hdrH * 1.5);
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(0, hdrH);
   ctx.lineTo(S, hdrH);
   ctx.stroke();
 
-  const logoSize = 44;
-  const enFontSz = 24;
-  const arFontSz = 18;
-  const gap = 16;
+  // اللوغو على اليمين
+  const logoSize = 54;
+  const logoX = S * 0.63;
+  const logoY = 22;
 
-  ctx.font = `800 ${enFontSz}px Cairo,Tajawal,sans-serif`;
-  const enW = ctx.measureText('Microsoft LSAC Club').width;
-
-  const arW = 240;
-  const arH = 34;
-
-  const textBlockW = Math.max(enW, arW);
-  const totalW = logoSize + gap + textBlockW;
-  const startX = (S - totalW) / 2;
-  const logoX = startX + textBlockW + gap;
-  const logoY = 20;
-
-  // english
-  ctx.save();
-  ctx.fillStyle = '#ffffff';
-  ctx.textAlign = 'center';
-  ctx.font = `800 ${enFontSz}px Cairo,Tajawal,sans-serif`;
-  ctx.fillText('Microsoft LSAC Club', startX + textBlockW / 2, 40);
-  ctx.restore();
-
-  // arabic
-  const headArImg = await arabicTextToImage('نادي مايكروسوفت', {
-    fontSize: arFontSz,
-    color: '#50E6FF',
-    width: arW,
-    height: arH
-  });
-  if (headArImg) {
-    ctx.drawImage(headArImg, startX, 48, arW, arH);
-  }
-
-  // logo
   if (logoImg) {
     ctx.save();
-    ctx.shadowColor = 'rgba(80,230,255,0.35)';
+    ctx.shadowColor = 'rgba(80,230,255,0.30)';
     ctx.shadowBlur = 14;
     ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
     ctx.restore();
   }
 
-  // ───────────────────────────────────────────
-  // Upper side decorative bursts
-  // ───────────────────────────────────────────
-  function drawBurst(x, y, flip = false) {
-    const dir = flip ? -1 : 1;
-    const lines = [
-      [0, 0, 34, -34],
-      [0, 0, 44, -22],
-      [0, 0, 52, -8],
-      [0, 0, 56, 8]
-    ];
+  // النص على اليسار
+  ctx.save();
+  ctx.textAlign = 'right';
+  ctx.direction = 'ltr';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 25px Cairo,Tajawal,sans-serif';
+  ctx.fillText('Microsoft LSAC Club', S * 0.61, 48);
+  ctx.restore();
 
+  const arHeadImg = await arabicTextToImage('نادي مايكروسوفت', {
+    fontSize: 19,
+    color: '#50E6FF',
+    width: 300,
+    height: 36
+  });
+  if (arHeadImg) {
+    ctx.drawImage(arHeadImg, S * 0.30, 55, 300, 36);
+  }
+
+  // ── الزخارف الجانبية ─────────────────────
+  function drawBurst(cx, cy, flip = false) {
+    const dir = flip ? -1 : 1;
     ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.62)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.58)';
     ctx.lineWidth = 3;
-    lines.forEach(([x1, y1, x2, y2]) => {
+    const rays = [
+      [34, -30],
+      [48, -12],
+      [60, 6],
+      [72, 24]
+    ];
+    rays.forEach(([dx, dy]) => {
       ctx.beginPath();
-      ctx.moveTo(x + x1, y + y1);
-      ctx.lineTo(x + x2 * dir, y + y2);
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + dir * dx, cy + dy);
       ctx.stroke();
     });
     ctx.restore();
   }
 
-  drawBurst(S * 0.16, S * 0.205, false);
-  drawBurst(S * 0.84, S * 0.205, true);
+  drawBurst(S * 0.15, S * 0.21, false);
+  drawBurst(S * 0.85, S * 0.21, true);
 
-  // ───────────────────────────────────────────
-  // Happy Eid image
-  // ───────────────────────────────────────────
+  // ── كلمة عيد ─────────────────────────────
   if (eidImg) {
-    const maxW = S * 0.47;
+    const maxW = S * 0.50;
     const maxH = S * 0.18;
     const natR = eidImg.width / eidImg.height;
 
     let dW = maxW;
     let dH = dW / natR;
-
     if (dH > maxH) {
       dH = maxH;
       dW = dH * natR;
     }
 
     const dX = (S - dW) / 2;
-    const dY = S * 0.315;
+    const dY = S * 0.31;
 
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.22)';
-    ctx.shadowBlur = 14;
+    ctx.shadowColor = 'rgba(0,0,0,0.20)';
+    ctx.shadowBlur = 12;
     ctx.drawImage(eidImg, dX, dY, dW, dH);
     ctx.restore();
   }
 
-  // ───────────────────────────────────────────
-  // Greeting line
-  // ───────────────────────────────────────────
-  const greetY = S * 0.515;
+  // ── كل عام وأنتم بخير ────────────────────
+  const greetY = S * 0.525;
 
-  ctx.save();
   ctx.fillStyle = '#FFB900';
-  ctx.font = '700 22px serif';
+  ctx.font = '700 20px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('✦', S / 2 - 145, greetY + 6);
-  ctx.fillText('✦', S / 2 + 145, greetY + 6);
-  ctx.restore();
+  ctx.fillText('✦', S / 2 - 145, greetY + 4);
+  ctx.fillText('✦', S / 2 + 145, greetY + 4);
 
   const greetImg = await arabicTextToImage('كل عام وأنتم بخير', {
-    fontSize: 35,
+    fontSize: 34,
     color: '#ffffff',
     fontWeight: '700',
     width: 430,
-    height: 62
+    height: 58
   });
   if (greetImg) {
-    ctx.drawImage(greetImg, (S - 430) / 2, greetY - 30, 430, 62);
+    ctx.drawImage(greetImg, (S - 430) / 2, greetY - 28, 430, 58);
   }
 
-  // ───────────────────────────────────────────
-  // Badge
-  // ───────────────────────────────────────────
+  // ── البادج ───────────────────────────────
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
-  const bdgW = 260;
-  const bdgH = role ? 82 : 64;
+  const bdgW = 255;
+  const bdgH = role ? 92 : 68;
   const bdgX = (S - bdgW) / 2;
-  const bdgY = S * 0.605;
-  const bdgR = 18;
+  const bdgY = S * 0.61;
+  const bdgR = 16;
 
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.22)';
-  ctx.shadowBlur = 16;
-  ctx.shadowOffsetY = 5;
-  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.shadowColor = 'rgba(0,0,0,0.24)';
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 6;
+  ctx.fillStyle = 'rgba(255,255,255,0.17)';
   roundRect(ctx, bdgX, bdgY, bdgW, bdgH, bdgR);
   ctx.fill();
   ctx.restore();
 
-  // border
-  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.19)';
   ctx.lineWidth = 2;
   roundRect(ctx, bdgX, bdgY, bdgW, bdgH, bdgR);
   ctx.stroke();
 
-  // inner gloss
-  const bdgGloss = ctx.createLinearGradient(0, bdgY, 0, bdgY + bdgH);
-  bdgGloss.addColorStop(0, 'rgba(255,255,255,0.10)');
-  bdgGloss.addColorStop(0.45, 'rgba(255,255,255,0.03)');
-  bdgGloss.addColorStop(1, 'rgba(255,255,255,0.00)');
-  ctx.fillStyle = bdgGloss;
+  const gloss = ctx.createLinearGradient(0, bdgY, 0, bdgY + bdgH);
+  gloss.addColorStop(0, 'rgba(255,255,255,0.10)');
+  gloss.addColorStop(0.35, 'rgba(255,255,255,0.03)');
+  gloss.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gloss;
   roundRect(ctx, bdgX, bdgY, bdgW, bdgH, bdgR);
   ctx.fill();
 
-  const nameFontSize = role ? 26 : 30;
-  const roleFontSize = 18;
-
   const nameImg = await arabicTextToImage(name, {
-    fontSize: nameFontSize,
+    fontSize: role ? 28 : 31,
     color: '#ffffff',
     fontFamily: 'Amiri, Cairo, Tajawal, sans-serif',
     width: bdgW,
-    height: 40
+    height: 46
   });
   if (nameImg) {
-    ctx.drawImage(nameImg, bdgX, bdgY + (role ? 8 : 12), bdgW, 40);
+    ctx.drawImage(nameImg, bdgX, bdgY + 9, bdgW, 46);
   }
 
   if (role) {
     const roleImg = await arabicTextToImage(role, {
-      fontSize: roleFontSize,
+      fontSize: 18,
       color: '#50E6FF',
+      fontFamily: 'Cairo, Tajawal, sans-serif',
       width: bdgW,
-      height: 28
+      height: 30
     });
     if (roleImg) {
-      ctx.drawImage(roleImg, bdgX, bdgY + 42, bdgW, 28);
+      ctx.drawImage(roleImg, bdgX, bdgY + 49, bdgW, 30);
     }
   }
 
-  // ───────────────────────────────────────────
-  // Footer
-  // ───────────────────────────────────────────
-  const ftTop = S * 0.875;
+  // ── الفوتر ───────────────────────────────
+  const ftTop = S * 0.865;
   const ftGrad = ctx.createLinearGradient(0, ftTop, 0, S);
   ftGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  ftGrad.addColorStop(1, 'rgba(0,0,0,0.24)');
+  ftGrad.addColorStop(1, 'rgba(0,0,0,0.26)');
   ctx.fillStyle = ftGrad;
   ctx.fillRect(0, ftTop, S, S - ftTop);
 
-  const ftY = S * 0.932;
-  const ftTextW = 340;
-  const ftTextH = 24;
+  const footerY = S * 0.935;
 
-  const ftImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
+  const footerImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.66)',
-    width: ftTextW,
-    height: ftTextH
+    color: 'rgba(255,255,255,0.64)',
+    width: 390,
+    height: 26
   });
-
-  if (ftImg) {
-    ctx.drawImage(ftImg, (S - ftTextW) / 2 - 4, ftY - 13, ftTextW, ftTextH);
+  if (footerImg) {
+    ctx.drawImage(footerImg, (S - 390) / 2 - 10, footerY - 15, 390, 26);
   }
 
+  // لوغو صغير يمين الفوتر
   if (logoImg) {
     ctx.save();
-    ctx.globalAlpha = 0.68;
-    ctx.drawImage(logoImg, S / 2 + 120, ftY - 12, 22, 22);
+    ctx.globalAlpha = 0.70;
+    ctx.drawImage(logoImg, S * 0.67, footerY - 13, 22, 22);
     ctx.restore();
   }
 
   return canvas;
-}
-
-// ══════════════════════════════════════════════
-//  رسم General Card
-// ══════════════════════════════════════════════
-
-async function drawGeneralCard() {
-  const W = 900, H = 1200;
-  const canvas = document.createElement('canvas');
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
-
-  const bgImg = await loadImage('image/eid.png');
-  if (bgImg) { ctx.drawImage(bgImg, 0, 0, W, H); }
-  else {
-    const g = ctx.createLinearGradient(0, 0, W, H);
-    g.addColorStop(0, '#881c3c'); g.addColorStop(1, '#d24a73');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  }
-
-  const ov = ctx.createLinearGradient(0, H*0.5, 0, H);
-  ov.addColorStop(0, 'rgba(0,0,0,0.05)');
-  ov.addColorStop(1, 'rgba(0,0,0,0.55)');
-  ctx.fillStyle = ov; ctx.fillRect(0, 0, W, H);
-
-  const name = document.getElementById('outName2').textContent.trim();
-  const bW = Math.min(W*0.82, 700), bH = 130;
-  const bX = (W - bW) / 2, bY = H*0.72 - bH/2;
-
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
-  ctx.fillStyle = 'rgba(0,0,0,0.45)';
-  roundRect(ctx, bX, bY, bW, bH, 40); ctx.fill();
-  ctx.restore();
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.28)'; ctx.lineWidth = 2.5;
-  roundRect(ctx, bX, bY, bW, bH, 40); ctx.stroke();
-
-  const nameImg = await arabicTextToImage(name, {
-    fontSize: 54, color: '#ffffff',
-    fontFamily: 'Cairo, Tajawal, sans-serif', fontWeight: '900',
-    width: bW, height: bH
-  });
-  if (nameImg) { ctx.drawImage(nameImg, bX, bY, bW, bH); }
-
-  return canvas;
-}
-
-// ══════════════════════════════════════════════
-//  عرض الصورة للحفظ (iOS)
-// ══════════════════════════════════════════════
-
-function showImagePreviewForSave(dataURL) {
-  let overlay = document.getElementById('savePreviewOverlay');
-
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'savePreviewOverlay';
-    overlay.style.cssText = `
-      position:fixed;inset:0;background:rgba(3,10,25,0.96);
-      z-index:999999;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
-      padding:20px;box-sizing:border-box;gap:16px;
-    `;
-    overlay.innerHTML = `
-      <div style="color:#fff;text-align:center;line-height:1.9;font-size:15px;max-width:320px;">
-        اضغطي مطولًا على الصورة ثم اختاري <b>حفظ الصورة</b>
-      </div>
-      <img id="savePreviewImage" alt="بطاقة المعايدة" style="
-        max-width:92vw;max-height:68vh;width:auto;height:auto;
-        border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:block;">
-      <button id="closeSavePreviewBtn" style="
-        border:none;border-radius:14px;padding:12px 22px;
-        font-size:15px;font-weight:700;background:#FFB900;color:#111;cursor:pointer;">
-        إغلاق
-      </button>
-    `;
-    document.body.appendChild(overlay);
-    overlay.querySelector('#closeSavePreviewBtn').addEventListener('click', () => {
-      overlay.style.display = 'none';
-    });
-  }
-
-  overlay.querySelector('#savePreviewImage').src = dataURL;
-  overlay.style.display = 'flex';
 }
 
 // ══════════════════════════════════════════════
