@@ -471,7 +471,7 @@ body::after {
 .main-opt:hover .preview-shine { left: 100px; }
 
 .blue-prev { background: linear-gradient(135deg, #001a5c, #0055cc); }
-.general-prev { background: linear-gradient(135deg, #881c3c, #d24a73); }
+.general-prev { background: linear-gradient(135deg, #cb3b67, #dc7b98); }
 
 .main-gift-gif {
   width: 44px;
@@ -808,7 +808,7 @@ body::after {
 }
 
 /* ══════════════════════════════════════════
-   CLUB CARD — Name Badge (مطابق للبطاقة العامة)
+   CLUB CARD — Name Badge 
 ══════════════════════════════════════════ */
 .club1-name-badge {
   position: absolute;
@@ -861,7 +861,7 @@ body::after {
 ══════════════════════════════════════════ */
 .gen1-name-badge {
   position: absolute;
-  top: 70%;
+  top: 65%;
   left: 50%;
   transform: translateX(-50%);
   width: 52%;
