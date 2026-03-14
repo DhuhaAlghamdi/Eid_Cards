@@ -610,134 +610,69 @@ function openBlobInNewTab(blob) {
 // ══════════════════════════════════════════════
 //  Download
 // ══════════════════════════════════════════════
+function showImagePreviewForSave(dataURL) {
+  let overlay = document.getElementById('savePreviewOverlay');
 
-async function downloadCard() {
-  const card = ['clubCard', 'genCard1']
-    .map(id => document.getElementById(id))
-    .find(el => el && !el.classList.contains('hidden'));
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'savePreviewOverlay';
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 10, 25, 0.96);
+      z-index: 999999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      gap: 16px;
+    `;
 
-  if (!card) return;
+    overlay.innerHTML = `
+      <div style="
+        color: #fff;
+        text-align: center;
+        line-height: 1.9;
+        font-size: 15px;
+        max-width: 320px;
+      ">
+        اضغطي مطولًا على الصورة ثم اختاري <b>حفظ الصورة</b>
+      </div>
 
-  const btn = document.getElementById('dlBtn');
-  const useSafeFallback = isIOSDevice() && isSafariBrowser();
+      <img id="savePreviewImage" alt="بطاقة المعايدة" style="
+        max-width: 92vw;
+        max-height: 68vh;
+        width: auto;
+        height: auto;
+        border-radius: 18px;
+        box-shadow: 0 12px 40px rgba(0,0,0,.35);
+        display: block;
+      ">
 
-  // مهم جدًا: فتح التبويب مباشرة مع ضغطة المستخدم
-  let iosTab = null;
-  if (useSafeFallback) {
-    iosTab = window.open('', '_blank');
+      <button id="closeSavePreviewBtn" style="
+        border: none;
+        border-radius: 14px;
+        padding: 12px 22px;
+        font-size: 15px;
+        font-weight: 700;
+        background: #FFB900;
+        color: #111;
+        cursor: pointer;
+      ">إغلاق</button>
+    `;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#closeSavePreviewBtn').addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
   }
 
-  btn.innerHTML = 'جاري التحميل...';
-  btn.disabled = true;
-
-  try {
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
-    }
-    await wait(350);
-
-    let canvas;
-
-    if (useSafeFallback) {
-      canvas = card.id === 'clubCard'
-        ? await drawClubCard()
-        : await drawGeneralCard();
-    } else {
-      try {
-        canvas = await captureVisibleCardCanvas(card);
-      } catch (captureErr) {
-        console.warn('DOM capture failed, using fallback draw:', captureErr);
-        canvas = card.id === 'clubCard'
-          ? await drawClubCard()
-          : await drawGeneralCard();
-      }
-    }
-
-    const dataURL = canvas.toDataURL('image/png');
-    const filename = 'mlsac-eid-1447.png';
-
-    if (useSafeFallback) {
-      if (iosTab) {
-        iosTab.document.open();
-        iosTab.document.write(`
-          <!DOCTYPE html>
-          <html lang="ar" dir="rtl">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>بطاقة المعايدة</title>
-            <style>
-              body{
-                margin:0;
-                background:#0b1220;
-                min-height:100vh;
-                display:flex;
-                flex-direction:column;
-                align-items:center;
-                justify-content:center;
-                gap:16px;
-                font-family:Arial, sans-serif;
-                padding:20px;
-                box-sizing:border-box;
-              }
-              img{
-                max-width:95vw;
-                height:auto;
-                display:block;
-                border-radius:16px;
-                box-shadow:0 10px 30px rgba(0,0,0,.35);
-              }
-              .tip{
-                color:#fff;
-                font-size:14px;
-                text-align:center;
-                line-height:1.8;
-                opacity:.95;
-              }
-            </style>
-          </head>
-          <body>
-            <img src="${dataURL}" alt="بطاقة المعايدة">
-            <div class="tip">اضغطي مطولًا على الصورة ثم اختاري حفظ الصورة</div>
-          </body>
-          </html>
-        `);
-        iosTab.document.close();
-      } else {
-        // fallback إذا Safari منع التبويب
-        document.body.innerHTML = `
-          <div style="background:#0b1220;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;font-family:Arial,sans-serif;gap:16px;">
-            <img src="${dataURL}" style="max-width:95vw;height:auto;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);" alt="بطاقة المعايدة">
-            <div style="color:#fff;font-size:14px;text-align:center;line-height:1.8;">اضغطي مطولًا على الصورة ثم اختاري حفظ الصورة</div>
-          </div>
-        `;
-      }
-    } else {
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = dataURL;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    }
-
-    btn.innerHTML = '<span>✅</span> <span>تم!</span>';
-    setTimeout(() => {
-      btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-      btn.disabled = false;
-    }, 2200);
-
-  } catch (err) {
-    console.error(err);
-
-    if (iosTab && !iosTab.closed) {
-      iosTab.close();
-    }
-
-    alert('حدث خطأ: ' + err.message);
-    btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-    btn.disabled = false;
-  }
+  const img = overlay.querySelector('#savePreviewImage');
+  img.src = dataURL;
+  overlay.style.display = 'flex';
 }
 
 // ══════════════════════════════════════════════
