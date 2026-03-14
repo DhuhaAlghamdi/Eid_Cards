@@ -311,41 +311,45 @@ async function drawClubCard() {
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, S, S);
 
-  // ── Badge الاسم والمنصب
+  // ── Badge الاسم والمنصب — مركز البوكس عند 81.5% من الصورة
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
-  const bdgW   = 520;
-  const bdgH   = role ? 118 : 82;
-  const bdgX   = (S - bdgW) / 2;
-  const bdgY   = S * 0.695;
-  const bdgR   = 22;
+  // البوكس في الصورة: عرضه ~52% من S، مركزه عند 81.5%
+  const bdgW = S * 0.52;
+  const bdgCenterY = S * 0.815;
+  const bdgX = (S - bdgW) / 2;
 
   // الاسم
   const nameImg = await arabicTextToImage(name, {
-    fontSize: role ? 38 : 44,
+    fontSize: role ? 52 : 58,
     color: '#ffffff',
     fontFamily: 'Cairo, Tajawal, sans-serif',
     fontWeight: '900',
     width: bdgW,
-    height: role ? 56 : 66
+    height: role ? 70 : 80
   });
   if (nameImg) {
-    ctx.drawImage(nameImg, bdgX, bdgY + (role ? 14 : 10), bdgW, role ? 56 : 66);
+    const nameH = role ? 70 : 80;
+    const totalH = role ? 70 + 8 + 46 : 80;
+    const startY = bdgCenterY - totalH / 2;
+    ctx.drawImage(nameImg, bdgX, startY, bdgW, nameH);
   }
 
   // المنصب
   if (role) {
     const roleImg = await arabicTextToImage(role, {
-      fontSize: 26,
+      fontSize: 34,
       color: '#50E6FF',
       fontFamily: 'Cairo, Tajawal, sans-serif',
       fontWeight: '700',
       width: bdgW,
-      height: 38
+      height: 46
     });
     if (roleImg) {
-      ctx.drawImage(roleImg, bdgX, bdgY + 68, bdgW, 38);
+      const totalH = 70 + 8 + 46;
+      const startY = bdgCenterY - totalH / 2;
+      ctx.drawImage(roleImg, bdgX, startY + 70 + 8, bdgW, 46);
     }
   }
 
@@ -395,25 +399,23 @@ async function drawGeneralCard() {
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
 
-  // الاسم
+  // الاسم — مركزه عند نفس نسبة بطاقة النادي
   const name = document.getElementById('outName2').textContent.trim();
 
-  const bdgW = 520;
-  const bdgH = 82;
+  const bdgW = W * 0.52;
+  const bdgCenterY = H * 0.815;
   const bdgX = (W - bdgW) / 2;
-  const bdgY = H * 0.72;
-  const bdgR = 22;
 
   const nameImg = await arabicTextToImage(name, {
-    fontSize: 44,
+    fontSize: 58,
     color: '#ffffff',
     fontFamily: 'Cairo, Tajawal, sans-serif',
     fontWeight: '900',
     width: bdgW,
-    height: 66
+    height: 80
   });
   if (nameImg) {
-    ctx.drawImage(nameImg, bdgX, bdgY + 10, bdgW, 66);
+    ctx.drawImage(nameImg, bdgX, bdgCenterY - 40, bdgW, 80);
   }
 
   return canvas;
