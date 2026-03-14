@@ -812,76 +812,84 @@ body::after {
 ══════════════════════════════════════════ */
 .club1-name-badge {
   position: absolute;
-  bottom: auto;
-  top: 72%;
+  top: 75%;
   left: 50%;
   transform: translateX(-50%);
-  width: auto;
-  max-width: 85%;
+  width: 52%;
+  height: 13%;
   background: transparent;
   border: none;
   box-shadow: none;
-  border-radius: 22px;
-  padding: 14px 28px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   z-index: 3;
-  white-space: nowrap;
 }
 
 .club1-name {
   color: var(--white);
-  font-size: clamp(14px, 3.5vw, 20px);   /* ← كان 22px–30px */
+  font-size: clamp(13px, 3.2vw, 18px);
   font-weight: 900;
   direction: rtl;
   line-height: 1.2;
   text-shadow: 0 2px 12px rgba(0,0,0,.4);
   font-family: 'Cairo', 'Tajawal', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .club1-role {
   color: var(--cyan);
-  font-size: clamp(10px, 2vw, 13px);     /* ← كان 13px–17px */
+  font-size: clamp(10px, 2vw, 12px);
   font-weight: 700;
   direction: rtl;
-  margin-top: 4px;
+  margin-top: 3px;
   font-family: 'Cairo', 'Tajawal', sans-serif;
   display: none;
+  white-space: nowrap;
 }
 
+.club1-role.show { display: block; }
 
 /* ══════════════════════════════════════════
    GENERAL CARD — Name Badge
 ══════════════════════════════════════════ */
 .gen1-name-badge {
   position: absolute;
-  bottom: auto;
-  top: 72%;
+  top: 75%;
   left: 50%;
   transform: translateX(-50%);
-  width: auto;
-  max-width: 85%;
+  width: 52%;
+  height: 13%;
   background: transparent;
   border: none;
   box-shadow: none;
-  border-radius: 22px;
-  padding: 14px 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   z-index: 3;
-  white-space: nowrap;
 }
 
 .gen1-name {
   color: var(--white);
-  font-size: clamp(14px, 3.5vw, 20px);   /* ← كان 22px–30px */
+  font-size: clamp(13px, 3.2vw, 18px);
   font-weight: 900;
   direction: rtl;
   line-height: 1.2;
   text-shadow: 0 2px 12px rgba(0,0,0,.4);
   font-family: 'Cairo', 'Tajawal', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
-
-.club1-role.show { display: block; }
-
 
 /* ══════════════════════════════════════════
    FLOATING SHAPES
