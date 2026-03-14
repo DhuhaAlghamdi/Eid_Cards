@@ -459,21 +459,43 @@ async function downloadCard() {
   if(document.fonts && document.fonts.ready) await document.fonts.ready;
   await new Promise(r => setTimeout(r, 400));
 
+  // كشف iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
   try {
     const canvas = card.id==='clubCard'
       ? await drawClubCard()
       : await drawGeneralCard();
 
-    const link = document.createElement('a');
-    link.download = 'mlsac-eid-1447.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    if (isIOS) {
+      // iOS: نفتح الصورة في tab جديد — المستخدم يضغط هولد ويحفظ
+      const dataUrl = canvas.toDataURL('image/png');
+      const win = window.open();
+      win.document.write(`
+        <html><head><meta name="viewport" content="width=device-width">
+        <style>body{margin:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;}
+        img{max-width:100%;border-radius:12px;}
+        p{color:#fff;font-family:sans-serif;font-size:14px;text-align:center;padding:16px;opacity:.8;}</style></head>
+        <body>
+          <p>اضغط على الصورة مطولاً ثم اختر "حفظ الصورة" 👇</p>
+          <img src="${dataUrl}">
+        </body></html>
+      `);
+      btn.innerHTML = '<span>✅</span> <span>افتحي الصورة وحفظيها</span>';
+    } else {
+      // Android / Desktop: تحميل مباشر
+      const link = document.createElement('a');
+      link.download = 'mlsac-eid-1447.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
+    }
 
-    btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
     setTimeout(() => {
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
       btn.disabled  = false;
-    }, 2200);
+    }, 3000);
+
   } catch(err) {
     console.error(err);
     alert('حدث خطأ: ' + err.message);
