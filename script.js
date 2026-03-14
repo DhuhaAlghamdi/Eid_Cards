@@ -136,7 +136,7 @@ function isIOSDevice() {
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
-// تحميل صورة كـ base64 عبر fetch
+// Load an image as base64 using fetch
 function loadImage(src) {
   return new Promise(resolve => {
     fetch(src)
@@ -179,7 +179,7 @@ function escapeXML(str) {
     .replace(/'/g, '&apos;');
 }
 
-// رسم النص العربي كصورة — آمن لكل المتصفحات
+// draw the arabic text - (safe for all the browsers)
 function arabicTextToImage(text, opts = {}) {
   const fontSize   = opts.fontSize   || 48;
   const color      = opts.color      || '#ffffff';
@@ -266,7 +266,7 @@ async function captureVisibleCardCanvas(cardEl) {
 }
 
 // ══════════════════════════════════════════════
-//  رسم Club Card — صورة خلفية + اسم + منصب
+//  Club Card — (drow background +name+role)
 // ══════════════════════════════════════════════
 
 async function drawClubCard() {
@@ -276,20 +276,20 @@ async function drawClubCard() {
   canvas.height = S;
   const ctx = canvas.getContext('2d');
 
-  // تحميل صورة الخلفية
+  // download the bacground pic 
   const bgImg = await loadImage('image/eidMicrosoft.png');
 
   if (bgImg) {
-    // رسم الصورة لتملأ الكانفاس (cover)
+    // draw the pic for full canvas (cover)
     const imgRatio = bgImg.width / bgImg.height;
     let sx = 0, sy = 0, sw = bgImg.width, sh = bgImg.height;
 
     if (imgRatio > 1) {
-      // الصورة عريضة — نقلّص العرض
+      // The image width & height
       sw = bgImg.height;
       sx = (bgImg.width - sw) / 2;
     } else if (imgRatio < 1) {
-      // الصورة طويلة — نقلّص الارتفاع
+      
       sh = bgImg.width;
       sy = (bgImg.height - sh) / 2;
     }
@@ -304,23 +304,23 @@ async function drawClubCard() {
     ctx.fillRect(0, 0, S, S);
   }
 
-  // overlay خفيف لتحسين قراءة الاسم
+  // Light overlay for better name readability
   const overlay = ctx.createLinearGradient(0, S * 0.6, 0, S);
   overlay.addColorStop(0, 'rgba(0,0,0,0)');
   overlay.addColorStop(1, 'rgba(0,0,0,0.45)');
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, S, S);
 
-  // ── Badge الاسم والمنصب — مركز البوكس عند 81.5% من الصورة
+  // ── name + role positions
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
-  // البوكس في الصورة: عرضه ~52% من S، مركزه عند 79%
+  // positions
   const bdgW = S * 0.52;
   const bdgCenterY = S * 0.79;
   const bdgX = (S - bdgW) / 2;
 
-  // الاسم
+  // name
   const nameImg = await arabicTextToImage(name, {
     fontSize: role ? 52 : 58,
     color: '#ffffff',
@@ -336,7 +336,7 @@ async function drawClubCard() {
     ctx.drawImage(nameImg, bdgX, startY, bdgW, nameH);
   }
 
-  // المنصب
+  // role
   if (role) {
     const roleImg = await arabicTextToImage(role, {
       fontSize: 34,
@@ -357,7 +357,7 @@ async function drawClubCard() {
 }
 
 // ══════════════════════════════════════════════
-//  رسم General Card — صورة خلفية + اسم
+// Draw General Card — background image + name
 // ══════════════════════════════════════════════
 
 async function drawGeneralCard() {
@@ -386,20 +386,20 @@ async function drawGeneralCard() {
     ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, W, H);
   } else {
     const bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, '#881c3c');
-    bg.addColorStop(1, '#d24a73');
+    bg.addColorStop(0, '#cb3b67');
+    bg.addColorStop(1, '#dc7b98');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
   }
 
-  // overlay
+  // overlay 
   const overlay = ctx.createLinearGradient(0, H * 0.6, 0, H);
   overlay.addColorStop(0, 'rgba(0,0,0,0)');
   overlay.addColorStop(1, 'rgba(0,0,0,0.45)');
   ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, W, H);
 
-  // الاسم — مركزه عند نفس نسبة بطاقة النادي
+  // the name position
   const name = document.getElementById('outName2').textContent.trim();
 
   const bdgW = W * 0.52;
@@ -422,7 +422,7 @@ async function drawGeneralCard() {
 }
 
 // ══════════════════════════════════════════════
-//  Download — مباشر بدون فتح صفحة جديدة
+//  Download 
 // ══════════════════════════════════════════════
 
 async function downloadCard() {
