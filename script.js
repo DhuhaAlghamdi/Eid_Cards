@@ -630,26 +630,29 @@ async function downloadCard() {
   try {
     let canvas;
 
-    // الحل الأساسي: تصوير نفس الكرت الظاهر
-    try {
-      canvas = await captureVisibleCardCanvas(card);
-    } catch (captureErr) {
-      console.warn('DOM capture failed, using fallback draw:', captureErr);
+    const useSafeFallback = isIOSDevice() && isSafariBrowser();
+
+    if (useSafeFallback) {
+      // Safari iPhone: نتجنب html2canvas لأنه يسبب الخطأ
       canvas = card.id === 'clubCard'
         ? await drawClubCard()
         : await drawGeneralCard();
+    } else {
+      try {
+        canvas = await captureVisibleCardCanvas(card);
+      } catch (captureErr) {
+        console.warn('DOM capture failed, using fallback draw:', captureErr);
+        canvas = card.id === 'clubCard'
+          ? await drawClubCard()
+          : await drawGeneralCard();
+      }
     }
 
     const dataURL = canvas.toDataURL('image/png');
     const blob = dataURLToBlob(dataURL);
     const filename = 'mlsac-eid-1447.png';
 
-    // iPhone Safari أحيانًا يتعامل أفضل مع فتح الصورة
-    if (isIOSDevice() && isSafariBrowser()) {
-      openBlobInNewTab(blob);
-    } else {
-      downloadBlob(blob, filename);
-    }
+    downloadBlob(blob, filename);
 
     btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
     setTimeout(() => {
