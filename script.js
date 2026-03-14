@@ -331,248 +331,36 @@ async function captureVisibleCardCanvas(cardEl) {
 //  رسم Club Card
 // ══════════════════════════════════════════════
 
-async function drawClubCard() {
-  const S = 1200;
-  const canvas = document.createElement('canvas');
-  canvas.width = S;
-  canvas.height = S;
-  const ctx = canvas.getContext('2d');
+function arabicTextToImageRight(text, opts = {}) {
+  const fontSize = opts.fontSize || 48;
+  const color = opts.color || '#ffffff';
+  const fontFamily = opts.fontFamily || 'Cairo, Tajawal, sans-serif';
+  const fontWeight = opts.fontWeight || '700';
+  const canvasW = opts.width || 900;
+  const canvasH = opts.height || Math.ceil(fontSize * 1.8);
+  const safeText = escapeXML(text);
 
-  const [logoImg, eidImg] = await Promise.all([
-    loadImage('image/logo.png'),
-    loadImage('image/happyeid.png')
-  ]);
+  const html = `<div xmlns="http://www.w3.org/1999/xhtml"
+    style="width:${canvasW}px;height:${canvasH}px;
+           display:flex;align-items:center;justify-content:flex-end;
+           direction:rtl;unicode-bidi:embed;
+           font-family:${fontFamily};font-size:${fontSize}px;
+           font-weight:${fontWeight};color:${color};
+           white-space:nowrap;overflow:visible;"
+  >${safeText}</div>`;
 
-  // ── خلفية ──
-  const bg = ctx.createLinearGradient(0, 0, S * 0.6, S);
-  bg.addColorStop(0, '#041530');
-  bg.addColorStop(0.35, '#0a2568');
-  bg.addColorStop(0.70, '#0d5bc9');
-  bg.addColorStop(1, '#1a78e8');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, S, S);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}">
+    <foreignObject width="${canvasW}" height="${canvasH}">${html}</foreignObject>
+  </svg>`;
 
-  const r1 = ctx.createRadialGradient(S * 0.3, 0, 0, S * 0.3, 0, S * 0.55);
-  r1.addColorStop(0, 'rgba(80,230,255,0.13)');
-  r1.addColorStop(1, 'transparent');
-  ctx.fillStyle = r1;
-  ctx.fillRect(0, 0, S, S);
+  const encoded = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 
-  const r2 = ctx.createRadialGradient(S * 0.7, S, 0, S * 0.7, S, S * 0.55);
-  r2.addColorStop(0, 'rgba(0,120,212,0.2)');
-  r2.addColorStop(1, 'transparent');
-  ctx.fillStyle = r2;
-  ctx.fillRect(0, 0, S, S);
-
-  // شبكة خفيفة
-  ctx.strokeStyle = 'rgba(255,255,255,0.022)';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < S; x += 48) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, S);
-    ctx.stroke();
-  }
-  for (let y = 0; y < S; y += 48) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(S, y);
-    ctx.stroke();
-  }
-
-  // نجوم
-  [
-    [0.08, 0.14], [0.88, 0.12], [0.15, 0.58], [0.82, 0.62], [0.50, 0.08],
-    [0.22, 0.32], [0.75, 0.32], [0.35, 0.78], [0.65, 0.22], [0.12, 0.48],
-    [0.90, 0.82], [0.50, 0.92]
-  ].forEach(([xr, yr]) => {
-    ctx.fillStyle = `rgba(255,255,255,${(0.2 + Math.random() * 0.35).toFixed(2)})`;
-    ctx.font = `${Math.round(Math.random() * 12 + 7)}px serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(Math.random() > 0.5 ? '✦' : '✧', xr * S, yr * S);
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = encoded;
   });
-
-  // ── هيدر ──
-  const hdrH = S * 0.13;
-  const hdrGrad = ctx.createLinearGradient(0, 0, 0, hdrH * 1.5);
-  hdrGrad.addColorStop(0, 'rgba(0,8,30,0.92)');
-  hdrGrad.addColorStop(1, 'rgba(0,8,30,0)');
-  ctx.fillStyle = hdrGrad;
-  ctx.fillRect(0, 0, S, hdrH * 1.5);
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, hdrH);
-  ctx.lineTo(S, hdrH);
-  ctx.stroke();
-
-  const logoSize = Math.round(hdrH * 0.60);
-  const logoCX = S / 2 + 20;
-  const logoY = (hdrH - logoSize) / 2;
-
-  if (logoImg) {
-    ctx.save();
-    ctx.shadowColor = 'rgba(80,230,255,0.3)';
-    ctx.shadowBlur = 16;
-    ctx.drawImage(logoImg, logoCX, logoY, logoSize, logoSize);
-    ctx.restore();
-  }
-
-  const txtX = logoCX - 12;
-  ctx.save();
-  ctx.textAlign = 'right';
-  ctx.direction = 'ltr';
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `800 ${Math.round(hdrH * 0.21)}px Cairo,Tajawal,sans-serif`;
-  ctx.fillText('Microsoft LSAC Club', txtX, hdrH * 0.38);
-  ctx.restore();
-
-  const arNameImg = await arabicTextToImage('نادي مايكروسوفت', {
-    fontSize: Math.round(hdrH * 0.19),
-    color: '#50E6FF',
-    width: 500,
-    height: Math.round(hdrH * 0.35)
-  });
-
-  if (arNameImg) {
-    ctx.drawImage(arNameImg, txtX - 500, hdrH * 0.54, 500, Math.round(hdrH * 0.35));
-  }
-
-  // ── كلمة عيد ──
-  const eidTop = S * 0.13;
-  const eidBot = S * 0.48;
-
-  if (eidImg) {
-    const maxW = S * 0.72;
-    const maxH = eidBot - eidTop - 10;
-    const natR = eidImg.width / eidImg.height;
-
-    let dW = maxW;
-    let dH = maxW / natR;
-
-    if (dH > maxH) {
-      dH = maxH;
-      dW = maxH * natR;
-    }
-
-    const dX = (S - dW) / 2;
-    const dY = eidTop + (maxH - dH) / 2 + 5;
-
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.28)';
-    ctx.shadowBlur = 20;
-    ctx.drawImage(eidImg, dX, dY, dW, dH);
-    ctx.restore();
-  }
-
-  // ── كل عام وأنتم بخير ──
-  const kolCY = S * 0.535;
-  ctx.fillStyle = '#FFB900';
-  ctx.font = '700 28px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('✦', S / 2 - 230, kolCY + 7);
-  ctx.fillText('✦', S / 2 + 230, kolCY + 7);
-
-  const kolImg = await arabicTextToImage('كل عام وأنتم بخير', {
-    fontSize: Math.round(S * 0.043),
-    color: 'rgba(255,255,255,0.95)',
-    fontWeight: '700',
-    width: S * 0.70,
-    height: Math.round(S * 0.072)
-  });
-
-  if (kolImg) {
-    ctx.drawImage(
-      kolImg,
-      S / 2 - (S * 0.70) / 2,
-      kolCY - Math.round(S * 0.055),
-      S * 0.70,
-      Math.round(S * 0.072)
-    );
-  }
-
-  // ── البادج ──
-  const name = document.getElementById('outName1').textContent.trim();
-  const role = document.getElementById('outRole1').textContent.trim();
-
-  const bdgCY = S * 0.705;
-  const bdgW = S * 0.42;
-  const bdgH = role ? S * 0.135 : S * 0.092;
-  const bdgX = (S - bdgW) / 2;
-  const bdgY = bdgCY - bdgH / 2;
-
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.25)';
-  ctx.shadowBlur = 24;
-  ctx.shadowOffsetY = 7;
-  ctx.fillStyle = 'rgba(255,255,255,0.22)';
-  roundRect(ctx, bdgX, bdgY, bdgW, bdgH, 18);
-  ctx.fill();
-  ctx.restore();
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx.lineWidth = 2;
-  roundRect(ctx, bdgX, bdgY, bdgW, bdgH, 18);
-  ctx.stroke();
-
-  const nameFontSize = role ? Math.round(S * 0.038) : Math.round(S * 0.044);
-  const nameImg = await arabicTextToImage(name, {
-    fontSize: nameFontSize,
-    color: '#ffffff',
-    fontFamily: 'Amiri, Cairo, Tajawal, sans-serif',
-    width: bdgW,
-    height: Math.round(nameFontSize * 1.6)
-  });
-
-  if (nameImg) {
-    const nameY = role ? bdgY + bdgH * 0.08 : bdgY + bdgH * 0.18;
-    ctx.drawImage(nameImg, bdgX, nameY, bdgW, Math.round(nameFontSize * 1.6));
-  }
-
-  if (role) {
-    const roleFontSize = Math.round(S * 0.026);
-    const roleImg = await arabicTextToImage(role, {
-      fontSize: roleFontSize,
-      color: '#50E6FF',
-      width: bdgW,
-      height: Math.round(roleFontSize * 1.6)
-    });
-
-    if (roleImg) {
-      ctx.drawImage(roleImg, bdgX, bdgY + bdgH * 0.52, bdgW, Math.round(roleFontSize * 1.6));
-    }
-  }
-
-  // ── الفوتر ──
-  const ftTop = S * 0.88;
-  const ftGrad = ctx.createLinearGradient(0, ftTop, 0, S);
-  ftGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  ftGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
-  ctx.fillStyle = ftGrad;
-  ctx.fillRect(0, ftTop, S, S - ftTop);
-
-  const ftCY = S * 0.944;
-
-  if (logoImg) {
-    ctx.save();
-    ctx.globalAlpha = 0.72;
-    ctx.drawImage(logoImg, S / 2 + 50, ftCY - 14, 28, 28);
-    ctx.restore();
-  }
-
-  const ftImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
-    fontSize: Math.round(S * 0.018),
-    color: 'rgba(255,255,255,0.65)',
-    width: 700,
-    height: Math.round(S * 0.032)
-  });
-
-  if (ftImg) {
-    ctx.drawImage(ftImg, S / 2 - 350 + 14, ftCY - Math.round(S * 0.025), 700, Math.round(S * 0.032));
-  }
-
-  return canvas;
 }
 
 // ══════════════════════════════════════════════
