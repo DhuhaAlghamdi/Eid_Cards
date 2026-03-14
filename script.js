@@ -368,250 +368,290 @@ async function captureVisibleCardCanvas(cardEl) {
 // ══════════════════════════════════════════════
 //  رسم Club Card
 // ══════════════════════════════════════════════
-
 async function drawClubCard() {
-  const S = 1200;
+  // نفس شكل الكرت بالموقع: عمودي أكثر من مربع
+  const W = 900;
+  const H = 1200;
+
   const canvas = document.createElement('canvas');
-  canvas.width = S;
-  canvas.height = S;
+  canvas.width = W;
+  canvas.height = H;
   const ctx = canvas.getContext('2d');
 
+  // ════════════════════════════════════════════
   // الخلفية
-  const bg = ctx.createLinearGradient(0, 0, S * 0.6, S);
-  bg.addColorStop(0, '#041530');
-  bg.addColorStop(0.35, '#0a2568');
-  bg.addColorStop(0.70, '#0d5bc9');
-  bg.addColorStop(1, '#1a78e8');
+  // ════════════════════════════════════════════
+  const bg = ctx.createLinearGradient(0, 0, W * 0.9, H);
+  bg.addColorStop(0, '#041633');
+  bg.addColorStop(0.28, '#0a2a73');
+  bg.addColorStop(0.68, '#1569d8');
+  bg.addColorStop(1, '#2f96ff');
   ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, S, S);
+  ctx.fillRect(0, 0, W, H);
 
-  const r1 = ctx.createRadialGradient(S * 0.3, 0, 0, S * 0.3, 0, S * 0.55);
-  r1.addColorStop(0, 'rgba(80,230,255,0.13)');
-  r1.addColorStop(1, 'transparent');
-  ctx.fillStyle = r1;
-  ctx.fillRect(0, 0, S, S);
+  const glowTop = ctx.createRadialGradient(W * 0.5, H * 0.22, 0, W * 0.5, H * 0.22, W * 0.75);
+  glowTop.addColorStop(0, 'rgba(80,230,255,0.08)');
+  glowTop.addColorStop(1, 'transparent');
+  ctx.fillStyle = glowTop;
+  ctx.fillRect(0, 0, W, H);
 
-  const r2 = ctx.createRadialGradient(S * 0.7, S, 0, S * 0.7, S, S * 0.55);
-  r2.addColorStop(0, 'rgba(0,120,212,0.2)');
-  r2.addColorStop(1, 'transparent');
-  ctx.fillStyle = r2;
-  ctx.fillRect(0, 0, S, S);
+  const glowBottom = ctx.createRadialGradient(W * 0.5, H * 0.95, 0, W * 0.5, H * 0.95, W * 0.7);
+  glowBottom.addColorStop(0, 'rgba(255,255,255,0.08)');
+  glowBottom.addColorStop(1, 'transparent');
+  ctx.fillStyle = glowBottom;
+  ctx.fillRect(0, 0, W, H);
 
-  // شبكة
-  ctx.strokeStyle = 'rgba(255,255,255,0.022)';
+  // شبكة خفيفة مثل الموقع
+  ctx.strokeStyle = 'rgba(255,255,255,0.045)';
   ctx.lineWidth = 1;
-  for (let x = 0; x < S; x += 48) {
+  const grid = 42;
+  for (let x = 0; x <= W; x += grid) {
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, S);
+    ctx.moveTo(x, H * 0.11);
+    ctx.lineTo(x, H * 0.87);
     ctx.stroke();
   }
-  for (let y = 0; y < S; y += 48) {
+  for (let y = H * 0.11; y <= H * 0.87; y += grid) {
     ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(S, y);
+    ctx.moveTo(W * 0.06, y);
+    ctx.lineTo(W * 0.94, y);
     ctx.stroke();
   }
 
-  // نجوم
-  [
-    [0.08, 0.14], [0.88, 0.12], [0.15, 0.58], [0.82, 0.62], [0.50, 0.08],
-    [0.22, 0.32], [0.75, 0.32], [0.35, 0.78], [0.65, 0.22], [0.12, 0.48],
-    [0.90, 0.82], [0.50, 0.92]
-  ].forEach(([xr, yr]) => {
-    ctx.fillStyle = `rgba(255,255,255,${(0.2 + Math.random() * 0.35).toFixed(2)})`;
-    ctx.font = `${Math.round(Math.random() * 12 + 7)}px serif`;
+  // نجوم ولمعات خفيفة
+  const sparkles = [
+    [0.10, 0.20], [0.18, 0.30], [0.86, 0.16], [0.82, 0.32],
+    [0.14, 0.57], [0.88, 0.56], [0.22, 0.73], [0.76, 0.70],
+    [0.50, 0.18], [0.35, 0.48], [0.63, 0.46], [0.50, 0.83]
+  ];
+  sparkles.forEach(([xr, yr], i) => {
+    ctx.save();
+    ctx.globalAlpha = 0.25 + (i % 3) * 0.08;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${10 + (i % 4) * 2}px serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(Math.random() > 0.5 ? '✦' : '✧', xr * S, yr * S);
+    ctx.fillText(i % 2 ? '✧' : '✦', xr * W, yr * H);
+    ctx.restore();
   });
 
+  // ════════════════════════════════════════════
   // الهيدر
-  const hdrH = S * 0.13;
-  const hdrGrad = ctx.createLinearGradient(0, 0, 0, hdrH * 1.5);
-  hdrGrad.addColorStop(0, 'rgba(0,8,30,0.92)');
-  hdrGrad.addColorStop(1, 'rgba(0,8,30,0)');
-  ctx.fillStyle = hdrGrad;
-  ctx.fillRect(0, 0, S, hdrH * 1.5);
+  // ════════════════════════════════════════════
+  const headerH = H * 0.115;
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  const headerGrad = ctx.createLinearGradient(0, 0, 0, headerH * 1.4);
+  headerGrad.addColorStop(0, 'rgba(0,10,28,0.92)');
+  headerGrad.addColorStop(1, 'rgba(0,10,28,0)');
+  ctx.fillStyle = headerGrad;
+  ctx.fillRect(0, 0, W, headerH * 1.5);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(0, hdrH);
-  ctx.lineTo(S, hdrH);
+  ctx.moveTo(0, headerH);
+  ctx.lineTo(W, headerH);
   ctx.stroke();
 
   const logoImg = await loadImage('image/logo.png');
-  const logoSize = Math.round(hdrH * 0.60);
-  const logoCX = S / 2 + 20;
-  const logoY = (hdrH - logoSize) / 2;
+
+  const logoSize = 56;
+  const logoX = W * 0.62;
+  const logoY = 22;
 
   if (logoImg) {
     ctx.save();
-    ctx.shadowColor = 'rgba(80,230,255,0.3)';
-    ctx.shadowBlur = 16;
-    ctx.drawImage(logoImg, logoCX, logoY, logoSize, logoSize);
+    ctx.shadowColor = 'rgba(80,230,255,0.35)';
+    ctx.shadowBlur = 12;
+    ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
     ctx.restore();
   }
 
-  // English header
-  const txtX = logoCX - 12;
+  // النص الإنجليزي
   ctx.save();
   ctx.textAlign = 'right';
   ctx.direction = 'ltr';
   ctx.fillStyle = '#ffffff';
-  ctx.font = `800 ${Math.round(hdrH * 0.21)}px Cairo,Tajawal,sans-serif`;
-  ctx.fillText('Microsoft LSAC Club', txtX, hdrH * 0.38);
+  ctx.font = '800 26px Cairo, Tajawal, sans-serif';
+  ctx.fillText('Microsoft LSAC Club', W * 0.60, 48);
   ctx.restore();
 
-  // Arabic header
-  const arNameImg = await arabicTextToImage('نادي مايكروسوفت', {
-    fontSize: Math.round(hdrH * 0.19),
+  // النص العربي
+  const arHeadImg = await arabicTextToImage('نادي مايكروسوفت', {
+    fontSize: 20,
     color: '#50E6FF',
-    width: 500,
-    height: Math.round(hdrH * 0.35)
+    width: 320,
+    height: 42
   });
-
-  if (arNameImg) {
-    ctx.drawImage(arNameImg, txtX - 500, hdrH * 0.54, 500, Math.round(hdrH * 0.35));
+  if (arHeadImg) {
+    ctx.drawImage(arHeadImg, W * 0.24, 54, 320, 42);
   }
 
-  // happy eid image
-  const eidTop = S * 0.13;
-  const eidBot = S * 0.48;
-  const eidImg = await loadImage('image/happyeid.png');
+  // ════════════════════════════════════════════
+  // الزخارف الجانبية العلوية
+  // ════════════════════════════════════════════
+  function drawBurst(cx, cy, flip = false) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 3;
+    const dir = flip ? -1 : 1;
+    const lengths = [44, 58, 70, 54];
+    const offsets = [-22, -6, 10, 26];
+    lengths.forEach((len, i) => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + dir * len, cy + offsets[i]);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
 
+  drawBurst(W * 0.13, H * 0.19, false);
+  drawBurst(W * 0.87, H * 0.19, true);
+
+  // ════════════════════════════════════════════
+  // صورة Happy Eid
+  // ════════════════════════════════════════════
+  const eidImg = await loadImage('image/happyeid.png');
   if (eidImg) {
-    const maxW = S * 0.72;
-    const maxH = eidBot - eidTop - 10;
-    const natR = eidImg.width / eidImg.height;
+    const maxW = W * 0.54;
+    const maxH = H * 0.20;
+    const ratio = eidImg.width / eidImg.height;
 
     let dW = maxW;
-    let dH = maxW / natR;
+    let dH = dW / ratio;
 
     if (dH > maxH) {
       dH = maxH;
-      dW = maxH * natR;
+      dW = dH * ratio;
     }
 
-    const dX = (S - dW) / 2;
-    const dY = eidTop + (maxH - dH) / 2 + 5;
+    const dX = (W - dW) / 2;
+    const dY = H * 0.29;
 
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.28)';
-    ctx.shadowBlur = 20;
+    ctx.shadowColor = 'rgba(0,0,0,0.22)';
+    ctx.shadowBlur = 14;
     ctx.drawImage(eidImg, dX, dY, dW, dH);
     ctx.restore();
   }
 
+  // ════════════════════════════════════════════
   // كل عام وأنتم بخير
-  const kolCY = S * 0.535;
-  ctx.fillStyle = '#FFB900';
-  ctx.font = '700 28px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('✦', S / 2 - 230, kolCY + 7);
-  ctx.fillText('✦', S / 2 + 230, kolCY + 7);
+  // ════════════════════════════════════════════
+  const greetY = H * 0.515;
 
-  const kolImg = await arabicTextToImage('كل عام وأنتم بخير', {
-    fontSize: Math.round(S * 0.043),
-    color: 'rgba(255,255,255,0.95)',
+  ctx.fillStyle = '#FFB900';
+  ctx.font = '700 22px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('✦', W / 2 - 150, greetY + 5);
+  ctx.fillText('✦', W / 2 + 150, greetY + 5);
+
+  const greetImg = await arabicTextToImage('كل عام وأنتم بخير', {
+    fontSize: 38,
+    color: '#ffffff',
     fontWeight: '700',
-    width: S * 0.70,
-    height: Math.round(S * 0.072)
+    width: 500,
+    height: 70
   });
 
-  if (kolImg) {
-    ctx.drawImage(
-      kolImg,
-      S / 2 - (S * 0.70) / 2,
-      kolCY - Math.round(S * 0.055),
-      S * 0.70,
-      Math.round(S * 0.072)
-    );
+  if (greetImg) {
+    ctx.drawImage(greetImg, (W - 500) / 2, greetY - 34, 500, 70);
   }
 
-  // badge
+  // ════════════════════════════════════════════
+  // البادج
+  // ════════════════════════════════════════════
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
-  const bdgCY = S * 0.705;
-  const bdgW = S * 0.42;
-  const bdgH = role ? S * 0.135 : S * 0.092;
-  const bdgX = (S - bdgW) / 2;
-  const bdgY = bdgCY - bdgH / 2;
+  const badgeW = 300;
+  const badgeH = role ? 118 : 88;
+  const badgeX = (W - badgeW) / 2;
+  const badgeY = H * 0.615;
 
+  // خلفية البادج
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.25)';
-  ctx.shadowBlur = 24;
-  ctx.shadowOffsetY = 7;
-  ctx.fillStyle = 'rgba(255,255,255,0.22)';
-  roundRect(ctx, bdgX, bdgY, bdgW, bdgH, 18);
+  ctx.shadowBlur = 20;
+  ctx.shadowOffsetY = 6;
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
   ctx.fill();
   ctx.restore();
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  // حدود البادج
+  ctx.strokeStyle = 'rgba(255,255,255,0.20)';
   ctx.lineWidth = 2;
-  roundRect(ctx, bdgX, bdgY, bdgW, bdgH, 18);
+  roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
   ctx.stroke();
 
-  const nameFontSize = role ? Math.round(S * 0.038) : Math.round(S * 0.044);
+  // لمعة خفيفة فوق البادج
+  const badgeGloss = ctx.createLinearGradient(0, badgeY, 0, badgeY + badgeH);
+  badgeGloss.addColorStop(0, 'rgba(255,255,255,0.12)');
+  badgeGloss.addColorStop(0.4, 'rgba(255,255,255,0.03)');
+  badgeGloss.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = badgeGloss;
+  roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
+  ctx.fill();
+
+  // الاسم
   const nameImg = await arabicTextToImage(name, {
-    fontSize: nameFontSize,
+    fontSize: role ? 34 : 38,
     color: '#ffffff',
     fontFamily: 'Amiri, Cairo, Tajawal, sans-serif',
-    width: bdgW,
-    height: Math.round(nameFontSize * 1.6)
+    width: badgeW,
+    height: 58
   });
-
   if (nameImg) {
-    const nameY = role ? bdgY + bdgH * 0.08 : bdgY + bdgH * 0.18;
-    ctx.drawImage(nameImg, bdgX, nameY, bdgW, Math.round(nameFontSize * 1.6));
+    ctx.drawImage(nameImg, badgeX, badgeY + 14, badgeW, 58);
   }
 
+  // المنصب
   if (role) {
-    const roleFontSize = Math.round(S * 0.026);
     const roleImg = await arabicTextToImage(role, {
-      fontSize: roleFontSize,
+      fontSize: 22,
       color: '#50E6FF',
-      width: bdgW,
-      height: Math.round(roleFontSize * 1.6)
+      fontFamily: 'Cairo, Tajawal, sans-serif',
+      width: badgeW,
+      height: 42
     });
-
     if (roleImg) {
-      ctx.drawImage(roleImg, bdgX, bdgY + bdgH * 0.52, bdgW, Math.round(roleFontSize * 1.6));
+      ctx.drawImage(roleImg, badgeX, badgeY + 62, badgeW, 42);
     }
   }
 
-  // footer
-  const ftTop = S * 0.88;
-  const ftGrad = ctx.createLinearGradient(0, ftTop, 0, S);
-  ftGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  ftGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
-  ctx.fillStyle = ftGrad;
-  ctx.fillRect(0, ftTop, S, S - ftTop);
+  // ════════════════════════════════════════════
+  // الفوتر
+  // ════════════════════════════════════════════
+  const footerTop = H * 0.87;
+  const footerGrad = ctx.createLinearGradient(0, footerTop, 0, H);
+  footerGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  footerGrad.addColorStop(1, 'rgba(0,0,0,0.28)');
+  ctx.fillStyle = footerGrad;
+  ctx.fillRect(0, footerTop, W, H - footerTop);
 
-  const ftCY = S * 0.944;
+  const footerY = H * 0.935;
 
   if (logoImg) {
     ctx.save();
-    ctx.globalAlpha = 0.72;
-    ctx.drawImage(logoImg, S / 2 + 50, ftCY - 14, 28, 28);
+    ctx.globalAlpha = 0.70;
+    ctx.drawImage(logoImg, W * 0.66, footerY - 14, 24, 24);
     ctx.restore();
   }
 
-  const ftImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
-    fontSize: Math.round(S * 0.018),
-    color: 'rgba(255,255,255,0.65)',
-    width: 700,
-    height: Math.round(S * 0.032)
+  const footerImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.66)',
+    width: 430,
+    height: 30
   });
 
-  if (ftImg) {
-    ctx.drawImage(ftImg, S / 2 - 350 + 14, ftCY - Math.round(S * 0.025), 700, Math.round(S * 0.032));
+  if (footerImg) {
+    ctx.drawImage(footerImg, (W - 430) / 2 - 6, footerY - 18, 430, 30);
   }
 
   return canvas;
 }
-
 // ══════════════════════════════════════════════
 //  رسم General Card
 // ══════════════════════════════════════════════
