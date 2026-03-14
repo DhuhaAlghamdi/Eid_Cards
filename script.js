@@ -317,7 +317,7 @@ async function drawClubCard() {
 
   // البوكس في الصورة: عرضه ~52% من S، مركزه عند 81.5%
   const bdgW = S * 0.52;
-  const bdgCenterY = S * 0.92;
+  const bdgCenterY = S * 0.87;
   const bdgX = (S - bdgW) / 2;
 
   // الاسم
