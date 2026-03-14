@@ -619,18 +619,24 @@ async function downloadCard() {
   if (!card) return;
 
   const btn = document.getElementById('dlBtn');
+  const useSafeFallback = isIOSDevice() && isSafariBrowser();
+
+  // مهم جدًا: فتح التبويب مباشرة مع ضغطة المستخدم
+  let iosTab = null;
+  if (useSafeFallback) {
+    iosTab = window.open('', '_blank');
+  }
+
   btn.innerHTML = 'جاري التحميل...';
   btn.disabled = true;
 
-  if (document.fonts && document.fonts.ready) {
-    await document.fonts.ready;
-  }
-  await wait(350);
-
   try {
-    let canvas;
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+    await wait(350);
 
-    const useSafeFallback = isIOSDevice() && isSafariBrowser();
+    let canvas;
 
     if (useSafeFallback) {
       canvas = card.id === 'clubCard'
@@ -650,11 +656,10 @@ async function downloadCard() {
     const dataURL = canvas.toDataURL('image/png');
     const filename = 'mlsac-eid-1447.png';
 
-    // على الآيفون/سفاري: افتح الصورة بدل تنزيلها مباشرة
     if (useSafeFallback) {
-      const newTab = window.open('', '_blank');
-      if (newTab) {
-        newTab.document.write(`
+      if (iosTab) {
+        iosTab.document.open();
+        iosTab.document.write(`
           <!DOCTYPE html>
           <html lang="ar" dir="rtl">
           <head>
@@ -665,13 +670,15 @@ async function downloadCard() {
               body{
                 margin:0;
                 background:#0b1220;
+                min-height:100vh;
                 display:flex;
+                flex-direction:column;
                 align-items:center;
                 justify-content:center;
-                min-height:100vh;
-                font-family:sans-serif;
-                flex-direction:column;
                 gap:16px;
+                font-family:Arial, sans-serif;
+                padding:20px;
+                box-sizing:border-box;
               }
               img{
                 max-width:95vw;
@@ -681,30 +688,37 @@ async function downloadCard() {
                 box-shadow:0 10px 30px rgba(0,0,0,.35);
               }
               .tip{
-                color:white;
+                color:#fff;
                 font-size:14px;
                 text-align:center;
-                padding:0 20px;
-                opacity:.9;
+                line-height:1.8;
+                opacity:.95;
               }
             </style>
           </head>
           <body>
             <img src="${dataURL}" alt="بطاقة المعايدة">
-            <div class="tip">اضغطي مطولًا على الصورة ثم اختاري “Save to Photos” أو “حفظ الصورة”</div>
+            <div class="tip">اضغطي مطولًا على الصورة ثم اختاري حفظ الصورة</div>
           </body>
           </html>
         `);
-        newTab.document.close();
+        iosTab.document.close();
       } else {
-        // إذا منع المتصفح فتح التبويب
-        window.location.href = dataURL;
+        // fallback إذا Safari منع التبويب
+        document.body.innerHTML = `
+          <div style="background:#0b1220;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;font-family:Arial,sans-serif;gap:16px;">
+            <img src="${dataURL}" style="max-width:95vw;height:auto;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);" alt="بطاقة المعايدة">
+            <div style="color:#fff;font-size:14px;text-align:center;line-height:1.8;">اضغطي مطولًا على الصورة ثم اختاري حفظ الصورة</div>
+          </div>
+        `;
       }
     } else {
       const link = document.createElement('a');
       link.download = filename;
       link.href = dataURL;
+      document.body.appendChild(link);
       link.click();
+      link.remove();
     }
 
     btn.innerHTML = '<span>✅</span> <span>تم!</span>';
@@ -715,11 +729,17 @@ async function downloadCard() {
 
   } catch (err) {
     console.error(err);
+
+    if (iosTab && !iosTab.closed) {
+      iosTab.close();
+    }
+
     alert('حدث خطأ: ' + err.message);
     btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
     btn.disabled = false;
   }
 }
+
 // ══════════════════════════════════════════════
 //  Floating shapes + Particles
 // ══════════════════════════════════════════════
