@@ -1,555 +1,1079 @@
-// =============================================
-//  MLSAC Eid Generator — script.js
-// =============================================
+/* =============================================
+   MLSAC Eid Generator — style.css
+   ============================================= */
 
-let majorTemplate = 0;
-
-function chooseMajor(n) {
-  majorTemplate = n;
-  document.getElementById('mainOpt1').classList.toggle('active', n === 1);
-  document.getElementById('mainOpt2').classList.toggle('active', n === 2);
-
-  setTimeout(() => {
-    document.getElementById('step1').classList.add('hidden');
-    if (n === 1) {
-      document.getElementById('step2A').classList.remove('hidden');
-      setTimeout(() => document.getElementById('nameA').focus(), 100);
-    } else {
-      document.getElementById('step2B').classList.remove('hidden');
-      setTimeout(() => document.getElementById('nameB').focus(), 100);
-    }
-  }, 200);
+:root {
+  --blue:      #0078D4;
+  --blue-dark: #004e8c;
+  --blue-deep: #001a5c;
+  --cyan:      #50E6FF;
+  --cyan-dim:  rgba(80,230,255,.18);
+  --gold:      #FFB900;
+  --gold-soft: rgba(255,185,0,.15);
+  --white:     #ffffff;
+  --glass:     rgba(255,255,255,.06);
+  --glass-border: rgba(255,255,255,.12);
+  --radius:    20px;
+  --shadow:    0 24px 60px rgba(0,0,0,.5);
 }
 
-function goBack() {
-  document.getElementById('step2A').classList.add('hidden');
-  document.getElementById('step2B').classList.add('hidden');
-  document.getElementById('step1').classList.remove('hidden');
-  scrollToTop();
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  scroll-behavior: smooth;
 }
 
-function goBackFromResult() {
-  document.getElementById('resultSection').classList.add('hidden');
-  ['clubCard', 'genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  document.getElementById('step1').classList.remove('hidden');
-  document.getElementById('mainOpt1').classList.remove('active');
-  document.getElementById('mainOpt2').classList.remove('active');
-
-  ['nameA', 'roleA', 'nameB'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-
-  scrollToTop();
+/* ── Body & Background ── */
+body {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  background: #00061a;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+  max-width: 100vw;
+  -webkit-text-size-adjust: 100%;
+  color: var(--white);
 }
 
-function scrollToTop() {
-  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 80);
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,78,140,.7) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 50%, rgba(0,120,212,.25) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 10% 80%, rgba(0,30,92,.5) 0%, transparent 50%),
+    linear-gradient(180deg, #000c2a 0%, #000e33 40%, #000820 100%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-function requireName(inputId) {
-  const el = document.getElementById(inputId);
-  const val = el.value.trim();
-
-  if (!val) {
-    el.focus();
-    el.style.borderColor = '#F25022';
-    el.style.boxShadow = '0 0 0 3px rgba(242,80,34,.2)';
-    el.classList.add('input-error');
-
-    setTimeout(() => {
-      el.style.borderColor = '';
-      el.style.boxShadow = '';
-      el.classList.remove('input-error');
-    }, 1400);
-
-    return null;
-  }
-
-  return val;
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at  6% 11%, rgba(255,255,255,.8) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 18% 48%, rgba(80,230,255,.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 32% 22%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(2px 2px at 47%  7%, rgba(80,230,255,.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 63% 65%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 78% 28%, rgba(255,185,0,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 91% 74%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 14% 83%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(2px 2px at 85% 90%, rgba(80,230,255,.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 40%, rgba(255,185,0,.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 70%, rgba(255,255,255,.35) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 72% 14%, rgba(80,230,255,.5) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: starTwinkle 8s ease-in-out infinite alternate;
 }
 
-// ── Confetti positions for both cards
-const FESTIVE_POS = [
-  [8, 10], [14, 16], [86, 10], [80, 18],
-  [11, 82], [86, 76], [50, 8], [50, 92],
-  [30, 25], [70, 75], [20, 60], [80, 40]
-];
-
-function buildFestiveDecor(containerId, colorA, colorB) {
-  const c = document.getElementById(containerId);
-  if (!c) return;
-  c.innerHTML = '';
-  FESTIVE_POS.forEach(([x, y], i) => {
-    const el = document.createElement('div');
-    el.className = 'c-confetti';
-    el.style.cssText = `left:${x}%;top:${y}%;width:${Math.random() * 8 + 5}px;height:${Math.random() * 8 + 5}px;background:${Math.random() > .5 ? colorA : colorB};animation-delay:${i * .16}s;animation-duration:${2 + Math.random() * 2}s;`;
-    c.appendChild(el);
-  });
+@keyframes starTwinkle {
+  0%   { opacity: 0.7; }
+  100% { opacity: 1; }
 }
 
-// ── Generate Club Card (same logic as General)
-function generateClub() {
-  const name = requireName('nameA');
-  if (!name) return;
-
-  const role = document.getElementById('roleA').value.trim();
-
-  document.getElementById('outName1').textContent = name;
-
-  const roleEl = document.getElementById('outRole1');
-  roleEl.textContent = role;
-  roleEl.classList.toggle('show', !!role);
-
-  buildFestiveDecor('club1Decor', '#50E6FF', 'rgba(255,185,0,.9)');
-  showResult('clubCard');
+#particleCanvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
 }
 
-// ── Generate General Card
-function generateGeneral() {
-  const name = requireName('nameB');
-  if (!name) return;
-  document.getElementById('outName2').textContent = name;
-  buildFestiveDecor('gen1Decor', '#ffffff', 'rgba(80,230,255,.9)');
-  showResult('genCard1');
+/* ── Layout ── */
+.page-wrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 0 16px 48px;
 }
 
-function showResult(visibleId) {
-  ['step1', 'step2A', 'step2B'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  ['clubCard', 'genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  document.getElementById(visibleId).classList.remove('hidden');
-  const section = document.getElementById('resultSection');
-  section.classList.remove('hidden');
-  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+.hidden { display: none !important; }
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+.site-header {
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 6, 26, 0.7);
+  border-bottom: 1px solid rgba(80,230,255,.15);
+  padding: 16px 24px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  animation: fadeDown .7s ease both;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-// ══════════════════════════════════════════════
-//  Helpers
-// ══════════════════════════════════════════════
-
-function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+.site-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.4;
 }
 
-function isIOSDevice() {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+.header-logo-wrap {
+  position: relative;
+  background: rgba(255,255,255,.08);
+  border: 1.5px solid rgba(80,230,255,.25);
+  border-radius: 14px;
+  padding: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-// تحميل صورة كـ base64 عبر fetch
-function loadImage(src) {
-  return new Promise(resolve => {
-    fetch(src)
-      .then(res => res.blob())
-      .then(blob => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const img = new Image();
-          img.onload  = () => resolve(img);
-          img.onerror = () => resolve(null);
-          img.src = reader.result;
-        };
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(blob);
-      })
-      .catch(() => resolve(null));
-  });
+.logo-glow-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 18px;
+  border: 1.5px solid var(--cyan);
+  opacity: 0;
+  animation: logoPulse 3s ease-in-out infinite;
 }
 
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+@keyframes logoPulse {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.06); }
 }
 
-function escapeXML(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+.site-logo {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
 }
 
-// رسم النص العربي كصورة — آمن لكل المتصفحات
-function arabicTextToImage(text, opts = {}) {
-  const fontSize   = opts.fontSize   || 48;
-  const color      = opts.color      || '#ffffff';
-  const fontFamily = opts.fontFamily || 'Cairo, Tajawal, sans-serif';
-  const fontWeight = opts.fontWeight || '700';
-  const canvasW    = opts.width      || 900;
-  const canvasH    = opts.height     || Math.ceil(fontSize * 1.8);
-  const safeText   = escapeXML(text);
+.header-text { text-align: right; flex: 1; }
 
-  const html = `<div xmlns="http://www.w3.org/1999/xhtml"
-    style="width:${canvasW}px;height:${canvasH}px;
-           display:flex;align-items:center;justify-content:center;
-           direction:rtl;unicode-bidi:embed;
-           font-family:${fontFamily};font-size:${fontSize}px;
-           font-weight:${fontWeight};color:${color};
-           white-space:nowrap;overflow:visible;"
-  >${safeText}</div>`;
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}">
-    <foreignObject width="${canvasW}" height="${canvasH}">${html}</foreignObject>
-  </svg>`;
-
-  const encoded = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
-
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload  = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = encoded;
-  });
+.site-title {
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: .3px;
 }
 
-// ══════════════════════════════════════════════
-//  html2canvas helper (Android + Desktop)
-// ══════════════════════════════════════════════
-
-async function ensureHtml2Canvas() {
-  if (window.html2canvas) return window.html2canvas;
-  await new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-  return window.html2canvas;
+.site-subtitle {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 2px;
+  opacity: 0.85;
 }
 
-async function captureVisibleCardCanvas(cardEl) {
-  const html2canvas = await ensureHtml2Canvas();
-  if (document.fonts && document.fonts.ready) await document.fonts.ready;
-  await wait(250);
-
-  const rect = cardEl.getBoundingClientRect();
-  const scale = Math.min(Math.max(window.devicePixelRatio || 2, 2), 3);
-
-  return await html2canvas(cardEl, {
-    backgroundColor: null,
-    useCORS: true,
-    allowTaint: false,
-    scale,
-    logging: false,
-    imageTimeout: 0,
-    removeContainer: true,
-    foreignObjectRendering: false,
-    width: Math.ceil(rect.width),
-    height: Math.ceil(rect.height),
-    windowWidth: document.documentElement.clientWidth,
-    windowHeight: document.documentElement.clientHeight,
-    scrollX: 0,
-    scrollY: 0,
-    onclone: (clonedDoc) => {
-      const clonedCard = clonedDoc.getElementById(cardEl.id);
-      if (!clonedCard) return;
-      clonedDoc.querySelectorAll('*').forEach(el => {
-        el.style.animationPlayState = 'paused';
-        el.style.caretColor = 'transparent';
-      });
-      clonedCard.style.transform = 'none';
-      clonedCard.style.filter = 'none';
-      clonedCard.style.margin = '0';
-    }
-  });
+/* ══════════════════════════════════════════
+   HERO
+══════════════════════════════════════════ */
+.hero-section {
+  width: 100%;
+  text-align: center;
+  padding: 32px 20px 16px;
+  animation: fadeDown .8s .1s ease both;
+  opacity: 0;
+  animation-fill-mode: forwards;
+  position: relative;
+  min-height: 300px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
 }
 
-// ══════════════════════════════════════════════
-//  رسم Club Card — صورة خلفية + اسم + منصب
-// ══════════════════════════════════════════════
+.hero-bg-orbs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 
-async function drawClubCard() {
-  const S = 1200;
-  const canvas = document.createElement('canvas');
-  canvas.width = S;
-  canvas.height = S;
-  const ctx = canvas.getContext('2d');
-
-  // تحميل صورة الخلفية
-  const bgImg = await loadImage('image/eidMlsac.png');
-
-  if (bgImg) {
-    // رسم الصورة لتملأ الكانفاس (cover)
-    const imgRatio = bgImg.width / bgImg.height;
-    let sx = 0, sy = 0, sw = bgImg.width, sh = bgImg.height;
-
-    if (imgRatio > 1) {
-      // الصورة عريضة — نقلّص العرض
-      sw = bgImg.height;
-      sx = (bgImg.width - sw) / 2;
-    } else if (imgRatio < 1) {
-      // الصورة طويلة — نقلّص الارتفاع
-      sh = bgImg.width;
-      sy = (bgImg.height - sh) / 2;
-    }
-
-    ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, S, S);
-  } else {
-    // fallback gradient
-    const bg = ctx.createLinearGradient(0, 0, S, S);
-    bg.addColorStop(0, '#041530');
-    bg.addColorStop(1, '#2d98ff');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, S, S);
-  }
-
-  // overlay خفيف لتحسين قراءة الاسم
-  const overlay = ctx.createLinearGradient(0, S * 0.6, 0, S);
-  overlay.addColorStop(0, 'rgba(0,0,0,0)');
-  overlay.addColorStop(1, 'rgba(0,0,0,0.45)');
-  ctx.fillStyle = overlay;
-  ctx.fillRect(0, 0, S, S);
-
-  // ── Badge الاسم والمنصب — مركز البوكس عند 81.5% من الصورة
-  const name = document.getElementById('outName1').textContent.trim();
-  const role = document.getElementById('outRole1').textContent.trim();
-
-  // البوكس في الصورة: عرضه ~52% من S، مركزه عند 81.5%
-  const bdgW = S * 0.52;
-  const bdgCenterY = S * 1.15;
-  const bdgX = (S - bdgW) / 2;
-
-  // الاسم
-  const nameImg = await arabicTextToImage(name, {
-    fontSize: role ? 52 : 58,
-    color: '#ffffff',
-    fontFamily: 'Cairo, Tajawal, sans-serif',
-    fontWeight: '900',
-    width: bdgW,
-    height: role ? 70 : 80
-  });
-  if (nameImg) {
-    const nameH = role ? 70 : 80;
-    const totalH = role ? 70 + 8 + 46 : 80;
-    const startY = bdgCenterY - totalH / 2;
-    ctx.drawImage(nameImg, bdgX, startY, bdgW, nameH);
-  }
-
-  // المنصب
-  if (role) {
-    const roleImg = await arabicTextToImage(role, {
-      fontSize: 46,
-      color: '#50E6FF',
-      fontFamily: 'Cairo, Tajawal, sans-serif',
-      fontWeight: '700',
-      width: bdgW,
-      height: 46
-    });
-    if (roleImg) {
-      const totalH = 70 + 8 + 46;
-      const startY = bdgCenterY - totalH / 2;
-      ctx.drawImage(roleImg, bdgX, startY + 70 + 8, bdgW, 46);
-    }
-  }
-
-  return canvas;
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: orbFloat 8s ease-in-out infinite;
 }
 
-// ══════════════════════════════════════════════
-//  رسم General Card — صورة خلفية + اسم
-// ══════════════════════════════════════════════
-
-async function drawGeneralCard() {
-  const W = 900;
-  const H = 1200;
-  const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext('2d');
-
-  const bgImg = await loadImage('image/eid.png');
-
-  if (bgImg) {
-    const imgRatio = bgImg.width / bgImg.height;
-    const canvasRatio = W / H;
-    let sx = 0, sy = 0, sw = bgImg.width, sh = bgImg.height;
-
-    if (imgRatio > canvasRatio) {
-      sw = bgImg.height * canvasRatio;
-      sx = (bgImg.width - sw) / 2;
-    } else {
-      sh = bgImg.width / canvasRatio;
-      sy = (bgImg.height - sh) / 2;
-    }
-
-    ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, W, H);
-  } else {
-    const bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, '#881c3c');
-    bg.addColorStop(1, '#d24a73');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  // overlay
-  const overlay = ctx.createLinearGradient(0, H * 0.6, 0, H);
-  overlay.addColorStop(0, 'rgba(0,0,0,0)');
-  overlay.addColorStop(1, 'rgba(0,0,0,0.45)');
-  ctx.fillStyle = overlay;
-  ctx.fillRect(0, 0, W, H);
-
-  // الاسم — مركزه عند نفس نسبة بطاقة النادي
-  const name = document.getElementById('outName2').textContent.trim();
-
-  const bdgW = W * 0.52;
-  const bdgCenterY = H * 0.815;
-  const bdgX = (W - bdgW) / 2;
-
-  const nameImg = await arabicTextToImage(name, {
-    fontSize: 70,
-    color: '#ffffff',
-    fontFamily: 'Cairo, Tajawal, sans-serif',
-    fontWeight: '900',
-    width: bdgW,
-    height: 80
-  });
-  if (nameImg) {
-    ctx.drawImage(nameImg, bdgX, bdgCenterY - 40, bdgW, 80);
-  }
-
-  return canvas;
+.orb-1 {
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(0,78,140,.5), transparent 70%);
+  top: -50px; left: -40px;
+  animation-delay: 0s;
 }
 
-// ══════════════════════════════════════════════
-//  Download — مباشر بدون فتح صفحة جديدة
-// ══════════════════════════════════════════════
-
-async function downloadCard() {
-  const card = ['clubCard', 'genCard1']
-    .map(id => document.getElementById(id))
-    .find(el => el && !el.classList.contains('hidden'));
-  if (!card) return;
-
-  const btn = document.getElementById('dlBtn');
-  btn.innerHTML = 'جاري التحميل...';
-  btn.disabled  = true;
-
-  try {
-    if (document.fonts && document.fonts.ready) await document.fonts.ready;
-    await wait(350);
-
-    const isIOS = isIOSDevice();
-    let canvas;
-
-    if (isIOS) {
-      // iOS: رسم يدوي لتفادي tainted canvas
-      canvas = card.id === 'clubCard'
-        ? await drawClubCard()
-        : await drawGeneralCard();
-    } else {
-      // Desktop/Android: html2canvas أولاً، وإلا رسم يدوي
-      try {
-        canvas = await captureVisibleCardCanvas(card);
-      } catch (err) {
-        console.warn('html2canvas failed, using manual draw:', err);
-        canvas = card.id === 'clubCard'
-          ? await drawClubCard()
-          : await drawGeneralCard();
-      }
-    }
-
-    const dataURL = canvas.toDataURL('image/png');
-
-    // تحميل مباشر — بدون فتح صفحة جديدة
-    const link = document.createElement('a');
-    link.download = 'mlsac-eid-1447.png';
-    link.href = dataURL;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    btn.innerHTML = '<span>✅</span> <span>تم!</span>';
-    setTimeout(() => {
-      btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-      btn.disabled  = false;
-    }, 2200);
-
-  } catch (err) {
-    console.error(err);
-    alert('حدث خطأ: ' + err.message);
-    btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-    btn.disabled  = false;
-  }
+.orb-2 {
+  width: 150px; height: 150px;
+  background: radial-gradient(circle, rgba(80,230,255,.2), transparent 70%);
+  top: 30px; right: -30px;
+  animation-delay: 2.5s;
 }
 
-// ══════════════════════════════════════════════
-//  Floating shapes + Particles
-// ══════════════════════════════════════════════
-
-function createFloatingShapes() {
-  const container = document.getElementById('floatingShapes');
-  if (!container) return;
-  const colors = ['#0078D4','#50E6FF','#FFB900','#7FBA00'];
-  const shapes = ['◆','✦','●','▪'];
-  for (let i = 0; i < 18; i++) {
-    const el = document.createElement('div');
-    el.className = 'float-shape';
-    const size = Math.random()*12+4, useEmoji = Math.random()>0.5;
-    el.style.cssText = `left:${Math.random()*100}%;bottom:-60px;width:${size}px;height:${size}px;${useEmoji?`color:${colors[Math.floor(Math.random()*colors.length)]};font-size:${size}px;`:`background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'3px'};transform:rotate(45deg);`}animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*12}s;`;
-    if (useEmoji) el.textContent = shapes[Math.floor(Math.random()*shapes.length)];
-    container.appendChild(el);
-  }
+.orb-3 {
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(255,185,0,.15), transparent 70%);
+  bottom: -20px; left: 30%;
+  animation-delay: 5s;
 }
 
-function initParticleCanvas() {
-  const canvas = document.getElementById('particleCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W = window.innerWidth, H = window.innerHeight;
-  canvas.width = W; canvas.height = H;
-  window.addEventListener('resize', () => {
-    W = window.innerWidth; H = window.innerHeight;
-    canvas.width = W; canvas.height = H;
-  });
-  const particles = [];
-  for (let i = 0; i < 30; i++) {
-    particles.push({
-      x: Math.random()*W, y: Math.random()*H,
-      r: Math.random()*1.5+0.5,
-      speedX: (Math.random()-0.5)*0.3,
-      speedY: (Math.random()-0.5)*0.3,
-      alpha: Math.random()*0.5+0.1,
-      color: Math.random()>0.5?'#50E6FF':'#FFB900'
-    });
-  }
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    particles.forEach(p => {
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha; ctx.fill();
-      p.x += p.speedX; p.y += p.speedY;
-      if (p.x<0||p.x>W) p.speedX *= -1;
-      if (p.y<0||p.y>H) p.speedY *= -1;
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(10px, -15px) scale(1.05); }
+  66% { transform: translate(-8px, 8px) scale(0.95); }
 }
 
-document.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    if (!document.getElementById('step2A').classList.contains('hidden')) generateClub();
-    else if (!document.getElementById('step2B').classList.contains('hidden')) generateGeneral();
-  }
-});
+.hero-decor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+  height: auto;
+}
 
-const shakeStyle = document.createElement('style');
-shakeStyle.textContent = `
-  @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
-  .input-error{animation:shake .35s ease both !important;}
-`;
-document.head.appendChild(shakeStyle);
+.hero-fireworks-right {
+  right: 4%;
+  top: 4%;
+  width: 100px;
+  opacity: 0.9;
+  animation: sparkle 3s ease-in-out infinite;
+}
 
-createFloatingShapes();
-initParticleCanvas();
+.hero-fireworks-left {
+  left: 4%;
+  top: 4%;
+  width: 100px;
+  opacity: 0.9;
+  animation: sparkle 3s ease-in-out infinite;
+  transform: scaleX(-1);
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(0.88); opacity: .65; }
+  50%  { transform: scale(1.12); opacity: 1; }
+}
+
+.hero-fireworks-left {
+  transform: scaleX(-1);
+}
+.hero-fireworks-left:hover { transform: scaleX(-1); }
+
+.hero-eid {
+  font-family: "Aref Ruqaa", serif;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  line-height: 1.15;
+}
+
+.eid-line-1 {
+  font-size: clamp(52px, 15vw, 90px);
+  font-weight: 700;
+  color: var(--white);
+  text-shadow:
+    0 0 40px rgba(80,230,255,.4),
+    0 2px 0 rgba(0,0,0,.3);
+  letter-spacing: 2px;
+  animation: textShimmer 4s ease-in-out infinite alternate;
+}
+
+.eid-line-2 {
+  font-size: clamp(38px, 10vw, 62px);
+  font-weight: 400;
+  color: var(--cyan);
+  text-shadow: 0 0 30px rgba(80,230,255,.6);
+  letter-spacing: 3px;
+}
+
+@keyframes textShimmer {
+  0%   { text-shadow: 0 0 30px rgba(80,230,255,.3), 0 2px 0 rgba(0,0,0,.3); }
+  100% { text-shadow: 0 0 50px rgba(80,230,255,.6), 0 2px 0 rgba(0,0,0,.3); }
+}
+
+.hero-divider-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 10px;
+  position: relative;
+  z-index: 5;
+}
+
+.divider-line {
+  width: 60px;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 2px;
+}
+
+.divider-star {
+  color: var(--gold);
+  font-size: 12px;
+  animation: starSpin 6s linear infinite;
+}
+
+@keyframes starSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hero-sub {
+  font-size: clamp(14px, 3.5vw, 17px);
+  color: rgba(255,255,255,.65);
+  font-weight: 400;
+  position: relative;
+  z-index: 5;
+  letter-spacing: .5px;
+}
+
+.hero-scroll-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,.25);
+  font-size: 18px;
+  animation: scrollBounce 2s ease-in-out infinite;
+  z-index: 5;
+}
+
+@keyframes scrollBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: .3; }
+  50% { transform: translateX(-50%) translateY(5px); opacity: .6; }
+}
+
+/* ══════════════════════════════════════════
+   STEP CARDS
+══════════════════════════════════════════ */
+.step-card {
+  width: 100%;
+  background: linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+  border: 1px solid rgba(80,230,255,.18);
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: fadeUp .55s ease both;
+  position: relative;
+  overflow: hidden;
+}
+
+.step-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(80,230,255,.4), transparent);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.step-label {
+  color: var(--cyan);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.main-template-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.main-opt {
+  background: rgba(255,255,255,.04);
+  border: 1.5px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-opt::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--cyan-dim), transparent);
+  opacity: 0;
+  transition: opacity .35s;
+}
+
+.main-opt:hover {
+  border-color: rgba(80,230,255,.45);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,.25);
+}
+
+.main-opt:hover::before { opacity: 1; }
+
+.main-opt.active {
+  border-color: var(--cyan);
+  background: rgba(80,230,255,.08);
+  box-shadow: 0 0 20px rgba(80,230,255,.2);
+}
+
+.main-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-shine {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 40px;
+  height: 80px;
+  background: rgba(255,255,255,.15);
+  transform: rotate(45deg);
+  transition: left .4s;
+}
+
+.main-opt:hover .preview-shine { left: 100px; }
+
+.blue-prev { background: linear-gradient(135deg, #001a5c, #0055cc); }
+.general-prev { background: linear-gradient(135deg, #881c3c, #d24a73); }
+
+.main-gift-gif {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.prev-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.prev-badge-text {
+  color: rgba(255,255,255,.7);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.main-opt-info { flex: 1; text-align: right; }
+
+.main-opt-label {
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 900;
+  margin-bottom: 3px;
+}
+
+.main-opt-sub {
+  color: rgba(255,255,255,.45);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.main-opt-arrow {
+  color: var(--cyan);
+  font-size: 18px;
+  opacity: 0;
+  transition: opacity .3s, transform .3s;
+  flex-shrink: 0;
+}
+
+.main-opt:hover .main-opt-arrow {
+  opacity: 1;
+  transform: translateX(-4px);
+}
+
+/* ── Input groups ── */
+.input-group { margin-bottom: 16px; }
+
+.input-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255,255,255,.6);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.required-dot {
+  color: #F25022;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.optional-tag {
+  background: rgba(255,255,255,.1);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 10px;
+  color: rgba(255,255,255,.4);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  right: 14px;
+  font-size: 18px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.field-input {
+  width: 100%;
+  padding: 14px 46px 14px 18px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(80,230,255,.25);
+  background: rgba(0,0,0,.35);
+  color: var(--white);
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: right;
+  outline: none;
+  transition: all .3s;
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+.field-input::placeholder { color: rgba(255,255,255,.25); font-weight: 400; }
+
+.field-input:focus {
+  border-color: var(--cyan);
+  background: rgba(0,78,140,.25);
+  box-shadow: 0 0 0 3px rgba(80,230,255,.1), 0 0 20px rgba(80,230,255,.15);
+}
+
+/* ── Buttons ── */
+.btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.back-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255,255,255,.2);
+  background: transparent;
+  color: rgba(255,255,255,.6);
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.back-btn:hover {
+  border-color: rgba(255,255,255,.45);
+  color: var(--white);
+  background: rgba(255,255,255,.06);
+}
+
+.back-btn.wide {
+  flex: unset;
+  width: 100%;
+  justify-content: center;
+}
+
+.gen-btn {
+  flex: 2;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #0078D4 0%, #005a9e 50%, #004080 100%);
+  color: var(--white);
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0,120,212,.35);
+}
+
+.gen-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+  transition: left .5s;
+}
+
+.gen-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,120,212,.55);
+}
+
+.gen-btn:hover::before { left: 100%; }
+
+.btn-sparkle {
+  font-size: 16px;
+  animation: sparkleSpin 2s linear infinite;
+}
+
+@keyframes sparkleSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(1.2); }
+  50% { transform: rotate(180deg) scale(1); }
+  75% { transform: rotate(270deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* ══════════════════════════════════════════
+   RESULT
+══════════════════════════════════════════ */
+.card-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: fadeUp .5s ease both;
+}
+
+.result-header { text-align: center; }
+
+.result-success-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(127,186,0,.2), rgba(127,186,0,.08));
+  border: 1.5px solid rgba(127,186,0,.4);
+  border-radius: 30px;
+  padding: 8px 20px;
+  color: #7FBA00;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.result-btns {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dl-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: 2px solid var(--gold);
+  background: linear-gradient(135deg, rgba(255,185,0,.12), rgba(255,185,0,.04));
+  color: var(--gold);
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: .5px;
+}
+
+.dl-btn:hover {
+  background: var(--gold);
+  color: #1a0800;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(255,185,0,.35);
+}
+
+.dl-icon {
+  font-size: 18px;
+  animation: dlBounce 2s ease-in-out infinite;
+}
+
+@keyframes dlBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+
+.share-hint {
+  text-align: center;
+  color: rgba(255,255,255,.35);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+/* ══════════════════════════════════════════
+   GREETING CARD — Base
+══════════════════════════════════════════ */
+.greeting-card {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 30px 70px rgba(0,0,0,.6),
+    0 0 0 1px rgba(255,255,255,.08);
+  transition: transform .3s;
+}
+
+.greeting-card:hover { transform: scale(1.01); }
+
+.card-gen { aspect-ratio: 3 / 4; }
+
+.c-confetti {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: popTwinkle 3s infinite;
+  box-shadow: 0 0 16px rgba(255,255,255,.3);
+}
+
+/* ══════════════════════════════════════════
+   SHARED: background image + overlay
+══════════════════════════════════════════ */
+.gen-bg-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.gen-overlay-soft {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(0,0,0,.5) 0%, rgba(0,0,0,.1) 40%, transparent 70%),
+    linear-gradient(to bottom, rgba(0,0,0,.25) 0%, transparent 30%);
+}
+
+.card-festive {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ══════════════════════════════════════════
+   CLUB CARD — Name Badge (مطابق للبطاقة العامة)
+══════════════════════════════════════════ */
+.club1-name-badge {
+  position: absolute;
+  top: 75%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52%;
+  height: 13%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 3;
+}
+
+.club1-name {
+  color: var(--white);
+  font-size: clamp(11px, 3.2vw, 15px);
+  font-weight: 900;
+  direction: rtl;
+  line-height: 1.2;
+  text-shadow: 0 2px 12px rgba(0,0,0,.4);
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.club1-role {
+  color: var(--cyan);
+  font-size: clamp(10px, 2vw, 12px);
+  font-weight: 700;
+  direction: rtl;
+  margin-top: 3px;
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  display: none;
+  white-space: nowrap;
+}
+
+.club1-role.show { display: block; }
+
+/* ══════════════════════════════════════════
+   GENERAL CARD — Name Badge
+══════════════════════════════════════════ */
+.gen1-name-badge {
+  position: absolute;
+  top: 75%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52%;
+  height: 13%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 3;
+}
+
+.gen1-name {
+  color: var(--white);
+  font-size: clamp(12px, 3.2vw, 16.5px);
+  font-weight: 900;
+  direction: rtl;
+  line-height: 1.2;
+  text-shadow: 0 2px 12px rgba(0,0,0,.4);
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ══════════════════════════════════════════
+   FLOATING SHAPES
+══════════════════════════════════════════ */
+.float-shape {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  animation: floatUp linear infinite;
+  opacity: 0;
+}
+
+@keyframes floatUp {
+  0%   { opacity: 0; transform: translateY(100vh) rotate(0deg); }
+  8%   { opacity: .4; }
+  92%  { opacity: .15; }
+  100% { opacity: 0; transform: translateY(-20vh) rotate(720deg); }
+}
+
+/* ══════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════ */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popTwinkle {
+  0%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+/* ══════════════════════════════════════════
+   SOCIAL BAR
+══════════════════════════════════════════ */
+.social-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 560px;
+  padding: 0 16px;
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+}
+
+.social-bar-label {
+  color: rgba(255,255,255,.3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-left: 4px;
+}
+
+.social-link {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.06);
+  border: 1.5px solid rgba(80,230,255,.2);
+  color: rgba(255,255,255,.65);
+  text-decoration: none;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  backdrop-filter: blur(10px);
+}
+
+.social-link svg { width: 20px; height: 20px; }
+
+.social-link:hover {
+  background: rgba(80,230,255,.12);
+  border-color: rgba(80,230,255,.55);
+  color: var(--cyan);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(80,230,255,.2);
+}
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+.site-footer {
+  width: 100%;
+  background: rgba(0, 5, 20, 0.8);
+  border-top: 1px solid rgba(80,230,255,.12);
+  backdrop-filter: blur(20px);
+  padding: 30px 24px 36px;
+  margin-top: 48px;
+  position: relative;
+  z-index: 1;
+}
+
+.footer-inner {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.footer-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.footer-main-logo {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  background: rgba(255,255,255,.07);
+  border: 1.5px solid rgba(80,230,255,.2);
+  border-radius: 12px;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.footer-bshy {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.footer-brand { text-align: right; flex: 1; }
+
+.footer-brand-name {
+  color: rgba(255,255,255,.75);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.footer-brand-sub {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .8px;
+  margin-top: 3px;
+  opacity: .7;
+}
+
+.footer-divider {
+  width: 80px;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, rgba(80,230,255,.35), transparent);
+  border-radius: 2px;
+}
+
+.footer-copy {
+  color: rgba(255,255,255,.3);
+  font-size: 11px;
+  font-weight: 400;
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media (max-width: 430px) {
+  .site-logo { width: 46px; height: 46px; }
+  .hero-section { min-height: 260px; padding: 24px 16px 12px; }
+  .eid-line-1 { font-size: 36px; }
+  .eid-line-2 { font-size: 30px; }
+  .step-card { padding: 18px 16px; }
+  .field-input { font-size: 16px; }
+  .gen-btn, .back-btn, .dl-btn { min-height: 50px; }
+  .club1-name { font-size: 20px; }
+  .gen1-name  { font-size: 20px; }
+}
+
+@media (max-width: 340px) {
+  .main-template-grid { gap: 10px; }
+  .eid-line-1 { font-size: 30px; }
+  .eid-line-2 { font-size: 26px; }
+}
