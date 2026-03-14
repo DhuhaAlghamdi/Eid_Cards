@@ -315,9 +315,9 @@ async function drawClubCard() {
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
-  // البوكس في الصورة: عرضه ~52% من S، مركزه عند 81.5%
+  // البوكس في الصورة: عرضه ~52% من S، مركزه عند 79%
   const bdgW = S * 0.52;
-  const bdgCenterY = S * 0.85;
+  const bdgCenterY = S * 0.79;
   const bdgX = (S - bdgW) / 2;
 
   // الاسم
@@ -339,7 +339,7 @@ async function drawClubCard() {
   // المنصب
   if (role) {
     const roleImg = await arabicTextToImage(role, {
-      fontSize: 46,
+      fontSize: 34,
       color: '#50E6FF',
       fontFamily: 'Cairo, Tajawal, sans-serif',
       fontWeight: '700',
@@ -407,7 +407,7 @@ async function drawGeneralCard() {
   const bdgX = (W - bdgW) / 2;
 
   const nameImg = await arabicTextToImage(name, {
-    fontSize: 70,
+    fontSize: 58,
     color: '#ffffff',
     fontFamily: 'Cairo, Tajawal, sans-serif',
     fontWeight: '900',
@@ -443,12 +443,10 @@ async function downloadCard() {
     let canvas;
 
     if (isIOS) {
-      // iOS: رسم يدوي لتفادي tainted canvas
       canvas = card.id === 'clubCard'
         ? await drawClubCard()
         : await drawGeneralCard();
     } else {
-      // Desktop/Android: html2canvas أولاً، وإلا رسم يدوي
       try {
         canvas = await captureVisibleCardCanvas(card);
       } catch (err) {
@@ -461,7 +459,6 @@ async function downloadCard() {
 
     const dataURL = canvas.toDataURL('image/png');
 
-    // تحميل مباشر — بدون فتح صفحة جديدة
     const link = document.createElement('a');
     link.download = 'mlsac-eid-1447.png';
     link.href = dataURL;
