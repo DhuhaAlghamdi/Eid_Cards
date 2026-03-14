@@ -633,7 +633,6 @@ async function downloadCard() {
     const useSafeFallback = isIOSDevice() && isSafariBrowser();
 
     if (useSafeFallback) {
-      // Safari iPhone: نتجنب html2canvas لأنه يسبب الخطأ
       canvas = card.id === 'clubCard'
         ? await drawClubCard()
         : await drawGeneralCard();
@@ -649,12 +648,66 @@ async function downloadCard() {
     }
 
     const dataURL = canvas.toDataURL('image/png');
-    const blob = dataURLToBlob(dataURL);
     const filename = 'mlsac-eid-1447.png';
 
-    downloadBlob(blob, filename);
+    // على الآيفون/سفاري: افتح الصورة بدل تنزيلها مباشرة
+    if (useSafeFallback) {
+      const newTab = window.open('', '_blank');
+      if (newTab) {
+        newTab.document.write(`
+          <!DOCTYPE html>
+          <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>بطاقة المعايدة</title>
+            <style>
+              body{
+                margin:0;
+                background:#0b1220;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                min-height:100vh;
+                font-family:sans-serif;
+                flex-direction:column;
+                gap:16px;
+              }
+              img{
+                max-width:95vw;
+                height:auto;
+                display:block;
+                border-radius:16px;
+                box-shadow:0 10px 30px rgba(0,0,0,.35);
+              }
+              .tip{
+                color:white;
+                font-size:14px;
+                text-align:center;
+                padding:0 20px;
+                opacity:.9;
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${dataURL}" alt="بطاقة المعايدة">
+            <div class="tip">اضغطي مطولًا على الصورة ثم اختاري “Save to Photos” أو “حفظ الصورة”</div>
+          </body>
+          </html>
+        `);
+        newTab.document.close();
+      } else {
+        // إذا منع المتصفح فتح التبويب
+        window.location.href = dataURL;
+      }
+    } else {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataURL;
+      link.click();
+    }
 
-    btn.innerHTML = '<span>✅</span> <span>تم التحميل!</span>';
+    btn.innerHTML = '<span>✅</span> <span>تم!</span>';
     setTimeout(() => {
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
       btn.disabled = false;
@@ -667,7 +720,6 @@ async function downloadCard() {
     btn.disabled = false;
   }
 }
-
 // ══════════════════════════════════════════════
 //  Floating shapes + Particles
 // ══════════════════════════════════════════════
