@@ -77,20 +77,10 @@ const STAR_POSITIONS = [
 function buildClubStars() {
   const container = document.getElementById('clubStars');
   if (!container) return;
-
   container.innerHTML = '';
-
   STAR_POSITIONS.forEach(([x, y], i) => {
     const star = document.createElement('div');
-    star.style.cssText = `
-      position:absolute;
-      left:${x}%;
-      top:${y}%;
-      color:rgba(255,255,255,${0.3 + Math.random() * 0.5});
-      font-size:${Math.random() * 10 + 8}px;
-      animation:popTwinkle ${2 + Math.random() * 2}s ${i * 0.2}s infinite;
-      pointer-events:none;
-    `;
+    star.style.cssText = `position:absolute;left:${x}%;top:${y}%;color:rgba(255,255,255,${0.3 + Math.random() * 0.5});font-size:${Math.random() * 10 + 8}px;animation:popTwinkle ${2 + Math.random() * 2}s ${i * 0.2}s infinite;pointer-events:none;`;
     star.textContent = Math.random() > 0.5 ? '✦' : '✧';
     container.appendChild(star);
   });
@@ -105,21 +95,11 @@ const FESTIVE_POS = [
 function buildFestiveDecor(containerId, colorA, colorB) {
   const c = document.getElementById(containerId);
   if (!c) return;
-
   c.innerHTML = '';
-
   FESTIVE_POS.forEach(([x, y], i) => {
     const el = document.createElement('div');
     el.className = 'c-confetti';
-    el.style.cssText = `
-      left:${x}%;
-      top:${y}%;
-      width:${Math.random() * 8 + 5}px;
-      height:${Math.random() * 8 + 5}px;
-      background:${Math.random() > .5 ? colorA : colorB};
-      animation-delay:${i * .16}s;
-      animation-duration:${2 + Math.random() * 2}s;
-    `;
+    el.style.cssText = `left:${x}%;top:${y}%;width:${Math.random() * 8 + 5}px;height:${Math.random() * 8 + 5}px;background:${Math.random() > .5 ? colorA : colorB};animation-delay:${i * .16}s;animation-duration:${2 + Math.random() * 2}s;`;
     c.appendChild(el);
   });
 }
@@ -132,7 +112,6 @@ function generateClub() {
   if (!name) return;
 
   const role = document.getElementById('roleA').value.trim();
-
   document.getElementById('outName1').textContent = name;
 
   const roleEl = document.getElementById('outRole1');
@@ -146,29 +125,18 @@ function generateClub() {
 function generateGeneral() {
   const name = requireName('nameB');
   if (!name) return;
-
   document.getElementById('outName2').textContent = name;
   buildFestiveDecor('gen1Decor', '#ffffff', 'rgba(80,230,255,.9)');
   showResult('genCard1');
 }
 
 function showResult(visibleId) {
-  ['step1', 'step2A', 'step2B'].forEach(id => {
-    document.getElementById(id).classList.add('hidden');
-  });
-
-  ['clubCard', 'genCard1'].forEach(id => {
-    document.getElementById(id).classList.add('hidden');
-  });
-
+  ['step1', 'step2A', 'step2B'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['clubCard', 'genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
   document.getElementById(visibleId).classList.remove('hidden');
-
   const section = document.getElementById('resultSection');
   section.classList.remove('hidden');
-
-  setTimeout(() => {
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 150);
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
 }
 
 // ══════════════════════════════════════════════
@@ -189,13 +157,23 @@ function isSafariBrowser() {
   return /Safari/i.test(ua) && !/Chrome|CriOS|EdgiOS|FxiOS/i.test(ua);
 }
 
+// تحميل صورة كـ base64 عبر fetch — يحل مشكلة tainted canvas في iOS
 function loadImage(src) {
   return new Promise(resolve => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
+    fetch(src)
+      .then(res => res.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const img = new Image();
+          img.onload  = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = reader.result;
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      })
+      .catch(() => resolve(null));
   });
 }
 
@@ -222,95 +200,46 @@ function escapeXML(str) {
     .replace(/'/g, '&apos;');
 }
 
-// رسم النص العربي بطريقة آمنة للآيفون
+// رسم النص العربي — data URL آمن لكل المتصفحات
 function arabicTextToImage(text, opts = {}) {
-  const fontSize = opts.fontSize || 48;
-  const color = opts.color || '#ffffff';
+  const fontSize   = opts.fontSize   || 48;
+  const color      = opts.color      || '#ffffff';
   const fontFamily = opts.fontFamily || 'Cairo, Tajawal, sans-serif';
   const fontWeight = opts.fontWeight || '700';
-  const canvasW = opts.width || 900;
-  const canvasH = opts.height || Math.ceil(fontSize * 1.8);
-  const safeText = escapeXML(text);
+  const canvasW    = opts.width      || 900;
+  const canvasH    = opts.height     || Math.ceil(fontSize * 1.8);
+  const safeText   = escapeXML(text);
 
-  const useSafeSvgText = isIOSDevice() || isSafariBrowser();
+  const html = `<div xmlns="http://www.w3.org/1999/xhtml"
+    style="width:${canvasW}px;height:${canvasH}px;
+           display:flex;align-items:center;justify-content:center;
+           direction:rtl;unicode-bidi:embed;
+           font-family:${fontFamily};font-size:${fontSize}px;
+           font-weight:${fontWeight};color:${color};
+           white-space:nowrap;overflow:visible;"
+  >${safeText}</div>`;
 
-  let svg;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}">
+    <foreignObject width="${canvasW}" height="${canvasH}">${html}</foreignObject>
+  </svg>`;
 
-  if (useSafeSvgText) {
-    svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}" viewBox="0 0 ${canvasW} ${canvasH}">
-        <style>
-          text {
-            font-family: ${fontFamily};
-            font-size: ${fontSize}px;
-            font-weight: ${fontWeight};
-            fill: ${color};
-          }
-        </style>
-        <text
-          x="50%"
-          y="50%"
-          text-anchor="middle"
-          dominant-baseline="middle"
-          direction="rtl"
-          unicode-bidi="plaintext"
-        >${safeText}</text>
-      </svg>
-    `;
-  } else {
-    const html = `
-      <div xmlns="http://www.w3.org/1999/xhtml"
-        style="
-          width:${canvasW}px;
-          height:${canvasH}px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          direction:rtl;
-          unicode-bidi:embed;
-          font-family:${fontFamily};
-          font-size:${fontSize}px;
-          font-weight:${fontWeight};
-          color:${color};
-          white-space:nowrap;
-          overflow:visible;
-        "
-      >${safeText}</div>
-    `;
-
-    svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}">
-        <foreignObject width="${canvasW}" height="${canvasH}">
-          ${html}
-        </foreignObject>
-      </svg>
-    `;
-  }
-
-  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+  // data URL بدل createObjectURL — يحل مشكلة iOS Safari
+  const encoded = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 
   return new Promise(resolve => {
     const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve(null);
-    };
-    img.src = url;
+    img.onload  = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = encoded;
   });
 }
 
 // ══════════════════════════════════════════════
-//  html2canvas helper
+//  html2canvas helper (للأندرويد والديسكتوب)
 // ══════════════════════════════════════════════
 
 async function ensureHtml2Canvas() {
   if (window.html2canvas) return window.html2canvas;
-
   await new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
@@ -318,17 +247,12 @@ async function ensureHtml2Canvas() {
     script.onerror = reject;
     document.head.appendChild(script);
   });
-
   return window.html2canvas;
 }
 
 async function captureVisibleCardCanvas(cardEl) {
   const html2canvas = await ensureHtml2Canvas();
-
-  if (document.fonts && document.fonts.ready) {
-    await document.fonts.ready;
-  }
-
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
   await wait(250);
 
   const rect = cardEl.getBoundingClientRect();
@@ -352,12 +276,10 @@ async function captureVisibleCardCanvas(cardEl) {
     onclone: (clonedDoc) => {
       const clonedCard = clonedDoc.getElementById(cardEl.id);
       if (!clonedCard) return;
-
       clonedDoc.querySelectorAll('*').forEach(el => {
         el.style.animationPlayState = 'paused';
         el.style.caretColor = 'transparent';
       });
-
       clonedCard.style.transform = 'none';
       clonedCard.style.filter = 'none';
       clonedCard.style.margin = '0';
@@ -366,361 +288,301 @@ async function captureVisibleCardCanvas(cardEl) {
 }
 
 // ══════════════════════════════════════════════
-//  رسم Club Card
+//  رسم Club Card — مطابق للموقع بالضبط
 // ══════════════════════════════════════════════
-async function drawClubCard() {
-  // نفس شكل الكرت بالموقع: عمودي أكثر من مربع
-  const W = 900;
-  const H = 1200;
 
+async function drawClubCard() {
+  const S = 1200;
   const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
+  canvas.width = S;
+  canvas.height = S;
   const ctx = canvas.getContext('2d');
 
-  // ════════════════════════════════════════════
-  // الخلفية
-  // ════════════════════════════════════════════
-  const bg = ctx.createLinearGradient(0, 0, W * 0.9, H);
-  bg.addColorStop(0, '#041633');
-  bg.addColorStop(0.28, '#0a2a73');
-  bg.addColorStop(0.68, '#1569d8');
-  bg.addColorStop(1, '#2f96ff');
+  // تحميل الصور كـ base64 مسبقاً (يحل tainted canvas في iOS)
+  const [logoImg, eidImg] = await Promise.all([
+    loadImage('image/logo.png'),
+    loadImage('image/happyeid.png')
+  ]);
+
+  // ── خلفية ──
+  const bg = ctx.createLinearGradient(0, 0, S * 0.6, S);
+  bg.addColorStop(0,    '#041530');
+  bg.addColorStop(0.35, '#0a2568');
+  bg.addColorStop(0.70, '#0d5bc9');
+  bg.addColorStop(1,    '#1a78e8');
   ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, 0, S, S);
 
-  const glowTop = ctx.createRadialGradient(W * 0.5, H * 0.22, 0, W * 0.5, H * 0.22, W * 0.75);
-  glowTop.addColorStop(0, 'rgba(80,230,255,0.08)');
-  glowTop.addColorStop(1, 'transparent');
-  ctx.fillStyle = glowTop;
-  ctx.fillRect(0, 0, W, H);
+  const r1 = ctx.createRadialGradient(S*0.3, 0, 0, S*0.3, 0, S*0.55);
+  r1.addColorStop(0, 'rgba(80,230,255,0.13)');
+  r1.addColorStop(1, 'transparent');
+  ctx.fillStyle = r1;
+  ctx.fillRect(0, 0, S, S);
 
-  const glowBottom = ctx.createRadialGradient(W * 0.5, H * 0.95, 0, W * 0.5, H * 0.95, W * 0.7);
-  glowBottom.addColorStop(0, 'rgba(255,255,255,0.08)');
-  glowBottom.addColorStop(1, 'transparent');
-  ctx.fillStyle = glowBottom;
-  ctx.fillRect(0, 0, W, H);
+  const r2 = ctx.createRadialGradient(S*0.7, S, 0, S*0.7, S, S*0.55);
+  r2.addColorStop(0, 'rgba(0,120,212,0.2)');
+  r2.addColorStop(1, 'transparent');
+  ctx.fillStyle = r2;
+  ctx.fillRect(0, 0, S, S);
 
-  // شبكة خفيفة مثل الموقع
-  ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+  // شبكة خفيفة
+  ctx.strokeStyle = 'rgba(255,255,255,0.022)';
   ctx.lineWidth = 1;
-  const grid = 42;
-  for (let x = 0; x <= W; x += grid) {
-    ctx.beginPath();
-    ctx.moveTo(x, H * 0.11);
-    ctx.lineTo(x, H * 0.87);
-    ctx.stroke();
-  }
-  for (let y = H * 0.11; y <= H * 0.87; y += grid) {
-    ctx.beginPath();
-    ctx.moveTo(W * 0.06, y);
-    ctx.lineTo(W * 0.94, y);
-    ctx.stroke();
-  }
+  for (let x = 0; x < S; x += 48) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,S); ctx.stroke(); }
+  for (let y = 0; y < S; y += 48) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(S,y); ctx.stroke(); }
 
-  // نجوم ولمعات خفيفة
-  const sparkles = [
-    [0.10, 0.20], [0.18, 0.30], [0.86, 0.16], [0.82, 0.32],
-    [0.14, 0.57], [0.88, 0.56], [0.22, 0.73], [0.76, 0.70],
-    [0.50, 0.18], [0.35, 0.48], [0.63, 0.46], [0.50, 0.83]
-  ];
-  sparkles.forEach(([xr, yr], i) => {
-    ctx.save();
-    ctx.globalAlpha = 0.25 + (i % 3) * 0.08;
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `${10 + (i % 4) * 2}px serif`;
+  // نجوم خلفية
+  [[0.08,0.14],[0.88,0.12],[0.15,0.58],[0.82,0.62],[0.50,0.08],
+   [0.22,0.32],[0.75,0.32],[0.35,0.78],[0.65,0.22],[0.12,0.48],
+   [0.90,0.82],[0.50,0.92]].forEach(([xr,yr]) => {
+    ctx.fillStyle = `rgba(255,255,255,${(0.2+Math.random()*0.35).toFixed(2)})`;
+    ctx.font = `${Math.round(Math.random()*12+7)}px serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(i % 2 ? '✧' : '✦', xr * W, yr * H);
-    ctx.restore();
+    ctx.fillText(Math.random()>0.5?'✦':'✧', xr*S, yr*S);
   });
 
-  // ════════════════════════════════════════════
-  // الهيدر
-  // ════════════════════════════════════════════
-  const headerH = H * 0.115;
+  // ── هيدر (0% → 13%) ──
+  const hdrH = S * 0.13;
 
-  const headerGrad = ctx.createLinearGradient(0, 0, 0, headerH * 1.4);
-  headerGrad.addColorStop(0, 'rgba(0,10,28,0.92)');
-  headerGrad.addColorStop(1, 'rgba(0,10,28,0)');
-  ctx.fillStyle = headerGrad;
-  ctx.fillRect(0, 0, W, headerH * 1.5);
+  const hdrGrad = ctx.createLinearGradient(0, 0, 0, hdrH * 1.5);
+  hdrGrad.addColorStop(0, 'rgba(0,8,30,0.92)');
+  hdrGrad.addColorStop(1, 'rgba(0,8,30,0)');
+  ctx.fillStyle = hdrGrad;
+  ctx.fillRect(0, 0, S, hdrH * 1.5);
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
   ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, headerH);
-  ctx.lineTo(W, headerH);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, hdrH); ctx.lineTo(S, hdrH); ctx.stroke();
 
-  const logoImg = await loadImage('image/logo.png');
+  // حساب عرض الكتلة (لوغو + نص) لتمركزها
+  const logoSize  = Math.round(hdrH * 0.62);
+  const gap       = 18;
+  const enFontSz  = Math.round(hdrH * 0.21);
+  const arFontSz  = Math.round(hdrH * 0.19);
+  const arImgW    = 360;
+  const arImgH    = Math.round(hdrH * 0.32);
 
-  const logoSize = 56;
-  const logoX = W * 0.62;
-  const logoY = 22;
+  ctx.font = `800 ${enFontSz}px Cairo,Tajawal,sans-serif`;
+  const enW = ctx.measureText('Microsoft LSAC Club').width;
+  const textColW = Math.max(enW, arImgW);
 
+  const blockW = logoSize + gap + textColW;
+  const blockX = (S - blockW) / 2;
+  const logoY  = (hdrH - logoSize) / 2;
+
+  // رسم اللوغو
   if (logoImg) {
     ctx.save();
-    ctx.shadowColor = 'rgba(80,230,255,0.35)';
-    ctx.shadowBlur = 12;
-    ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+    ctx.shadowColor = 'rgba(80,230,255,0.3)';
+    ctx.shadowBlur  = 16;
+    ctx.drawImage(logoImg, blockX, logoY, logoSize, logoSize);
     ctx.restore();
   }
 
-  // النص الإنجليزي
+  // النص الإنجليزي (يسار اللوغو)
+  const txX = blockX + logoSize + gap;
   ctx.save();
-  ctx.textAlign = 'right';
+  ctx.textAlign = 'left';
   ctx.direction = 'ltr';
   ctx.fillStyle = '#ffffff';
-  ctx.font = '800 26px Cairo, Tajawal, sans-serif';
-  ctx.fillText('Microsoft LSAC Club', W * 0.60, 48);
+  ctx.font = `800 ${enFontSz}px Cairo,Tajawal,sans-serif`;
+  ctx.fillText('Microsoft LSAC Club', txX, hdrH * 0.42);
   ctx.restore();
 
-  // النص العربي
-  const arHeadImg = await arabicTextToImage('نادي مايكروسوفت', {
-    fontSize: 20,
-    color: '#50E6FF',
-    width: 320,
-    height: 42
+  // النص العربي تحت الإنجليزي
+  const arNameImg = await arabicTextToImage('نادي مايكروسوفت', {
+    fontSize: arFontSz, color: '#50E6FF',
+    width: arImgW, height: arImgH
   });
-  if (arHeadImg) {
-    ctx.drawImage(arHeadImg, W * 0.24, 54, 320, 42);
+  if (arNameImg) {
+    ctx.drawImage(arNameImg, txX, hdrH * 0.55, arImgW, arImgH);
   }
 
-  // ════════════════════════════════════════════
-  // الزخارف الجانبية العلوية
-  // ════════════════════════════════════════════
-  function drawBurst(cx, cy, flip = false) {
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-    ctx.lineWidth = 3;
-    const dir = flip ? -1 : 1;
-    const lengths = [44, 58, 70, 54];
-    const offsets = [-22, -6, 10, 26];
-    lengths.forEach((len, i) => {
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + dir * len, cy + offsets[i]);
-      ctx.stroke();
-    });
-    ctx.restore();
-  }
+  // ── صورة happyeid (13% → 50%) ──
+  const eidTop = S * 0.13;
+  const eidBot = S * 0.50;
 
-  drawBurst(W * 0.13, H * 0.19, false);
-  drawBurst(W * 0.87, H * 0.19, true);
-
-  // ════════════════════════════════════════════
-  // صورة Happy Eid
-  // ════════════════════════════════════════════
-  const eidImg = await loadImage('image/happyeid.png');
   if (eidImg) {
-    const maxW = W * 0.54;
-    const maxH = H * 0.20;
-    const ratio = eidImg.width / eidImg.height;
-
-    let dW = maxW;
-    let dH = dW / ratio;
-
-    if (dH > maxH) {
-      dH = maxH;
-      dW = dH * ratio;
-    }
-
-    const dX = (W - dW) / 2;
-    const dY = H * 0.29;
-
+    const maxW = S * 0.70;
+    const maxH = eidBot - eidTop - 10;
+    const natR = eidImg.width / eidImg.height;
+    let dW = maxW, dH = maxW / natR;
+    if (dH > maxH) { dH = maxH; dW = maxH * natR; }
+    const dX = (S - dW) / 2;
+    const dY = eidTop + (maxH - dH) / 2 + 5;
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.22)';
-    ctx.shadowBlur = 14;
+    ctx.shadowColor = 'rgba(0,0,0,0.28)';
+    ctx.shadowBlur  = 20;
     ctx.drawImage(eidImg, dX, dY, dW, dH);
     ctx.restore();
   }
 
-  // ════════════════════════════════════════════
-  // كل عام وأنتم بخير
-  // ════════════════════════════════════════════
-  const greetY = H * 0.515;
+  // ── "كل عام وأنتم بخير" (51% → 60%) ──
+  const kolCY = S * 0.545;
 
-  ctx.fillStyle = '#FFB900';
-  ctx.font = '700 22px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('✦', W / 2 - 150, greetY + 5);
-  ctx.fillText('✦', W / 2 + 150, greetY + 5);
+  // نجمتان ذهبيتان
+  ctx.fillStyle  = '#FFB900';
+  ctx.font       = '700 26px serif';
+  ctx.textAlign  = 'center';
+  ctx.fillText('✦', S/2 - 220, kolCY + 8);
+  ctx.fillText('✦', S/2 + 220, kolCY + 8);
 
-  const greetImg = await arabicTextToImage('كل عام وأنتم بخير', {
-    fontSize: 38,
-    color: '#ffffff',
-    fontWeight: '700',
-    width: 500,
-    height: 70
+  const kolFsz = Math.round(S * 0.038);
+  const kolW   = S * 0.60;
+  const kolH   = Math.round(kolFsz * 1.8);
+  const kolImg = await arabicTextToImage('كل عام وأنتم بخير', {
+    fontSize: kolFsz, color: 'rgba(255,255,255,0.95)',
+    fontWeight: '700', width: kolW, height: kolH
   });
-
-  if (greetImg) {
-    ctx.drawImage(greetImg, (W - 500) / 2, greetY - 34, 500, 70);
+  if (kolImg) {
+    ctx.drawImage(kolImg, S/2 - kolW/2, kolCY - kolH * 0.78, kolW, kolH);
   }
 
-  // ════════════════════════════════════════════
-  // البادج
-  // ════════════════════════════════════════════
+  // ── البادج (62% → 77%) ──
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
-  const badgeW = 300;
-  const badgeH = role ? 118 : 88;
-  const badgeX = (W - badgeW) / 2;
-  const badgeY = H * 0.615;
+  // البادج في الموقع: max-width:260px على ~560px → ~46% | height:70px → ~12.5%
+  const bdgW  = S * 0.40;
+  const bdgH  = role ? S * 0.120 : S * 0.088;
+  const bdgCY = S * 0.700;
+  const bdgX  = (S - bdgW) / 2;
+  const bdgY  = bdgCY - bdgH / 2;
+  const bdgR  = 20;
 
-  // خلفية البادج
+  // ظل وخلفية
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.25)';
-  ctx.shadowBlur = 20;
-  ctx.shadowOffsetY = 6;
-  ctx.fillStyle = 'rgba(255,255,255,0.18)';
-  roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
+  ctx.shadowColor   = 'rgba(0,0,0,0.25)';
+  ctx.shadowBlur    = 24;
+  ctx.shadowOffsetY = 7;
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  roundRect(ctx, bdgX, bdgY, bdgW, bdgH, bdgR);
   ctx.fill();
   ctx.restore();
 
-  // حدود البادج
-  ctx.strokeStyle = 'rgba(255,255,255,0.20)';
-  ctx.lineWidth = 2;
-  roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
+  // حدود
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth   = 2;
+  roundRect(ctx, bdgX, bdgY, bdgW, bdgH, bdgR);
   ctx.stroke();
 
-  // لمعة خفيفة فوق البادج
-  const badgeGloss = ctx.createLinearGradient(0, badgeY, 0, badgeY + badgeH);
-  badgeGloss.addColorStop(0, 'rgba(255,255,255,0.12)');
-  badgeGloss.addColorStop(0.4, 'rgba(255,255,255,0.03)');
-  badgeGloss.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = badgeGloss;
-  roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
-  ctx.fill();
+  // حلقة توهج سيان
+  ctx.save();
+  ctx.strokeStyle = 'rgba(80,230,255,0.3)';
+  ctx.lineWidth   = 1.5;
+  roundRect(ctx, bdgX-3, bdgY-3, bdgW+6, bdgH+6, bdgR+3);
+  ctx.stroke();
+  ctx.restore();
 
-  // الاسم
-  const nameImg = await arabicTextToImage(name, {
-    fontSize: role ? 34 : 38,
-    color: '#ffffff',
+  // الاسم — مركزي عمودياً إذا بدون منصب، وفي الثلث العلوي إذا مع منصب
+  const nameFsz  = role ? Math.round(S * 0.036) : Math.round(S * 0.040);
+  const nameImgH = Math.round(nameFsz * 1.5);
+  const nameImg2 = await arabicTextToImage(name, {
+    fontSize: nameFsz, color: '#ffffff',
     fontFamily: 'Amiri, Cairo, Tajawal, sans-serif',
-    width: badgeW,
-    height: 58
+    width: bdgW, height: nameImgH
   });
-  if (nameImg) {
-    ctx.drawImage(nameImg, badgeX, badgeY + 14, badgeW, 58);
+  if (nameImg2) {
+    const nameY = role
+      ? bdgY + bdgH * 0.06
+      : bdgY + (bdgH - nameImgH) / 2;
+    ctx.drawImage(nameImg2, bdgX, nameY, bdgW, nameImgH);
   }
 
-  // المنصب
+  // المنصب — في الثلث السفلي
   if (role) {
-    const roleImg = await arabicTextToImage(role, {
-      fontSize: 22,
-      color: '#50E6FF',
-      fontFamily: 'Cairo, Tajawal, sans-serif',
-      width: badgeW,
-      height: 42
+    const roleFsz  = Math.round(S * 0.025);
+    const roleImgH = Math.round(roleFsz * 1.5);
+    const roleImg2 = await arabicTextToImage(role, {
+      fontSize: roleFsz, color: '#50E6FF',
+      width: bdgW, height: roleImgH
     });
-    if (roleImg) {
-      ctx.drawImage(roleImg, badgeX, badgeY + 62, badgeW, 42);
+    if (roleImg2) {
+      const roleY = bdgY + bdgH - roleImgH - bdgH * 0.08;
+      ctx.drawImage(roleImg2, bdgX, roleY, bdgW, roleImgH);
     }
   }
 
-  // ════════════════════════════════════════════
-  // الفوتر
-  // ════════════════════════════════════════════
-  const footerTop = H * 0.87;
-  const footerGrad = ctx.createLinearGradient(0, footerTop, 0, H);
-  footerGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  footerGrad.addColorStop(1, 'rgba(0,0,0,0.28)');
-  ctx.fillStyle = footerGrad;
-  ctx.fillRect(0, footerTop, W, H - footerTop);
+  // ── فوتر (88% → 100%) ──
+  const ftTop = S * 0.88;
+  const ftGrad = ctx.createLinearGradient(0, ftTop, 0, S);
+  ftGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  ftGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+  ctx.fillStyle = ftGrad;
+  ctx.fillRect(0, ftTop, S, S - ftTop);
 
-  const footerY = H * 0.935;
+  const ftCY      = S * 0.944;
+  const ftLogoSz  = 26;
+  const ftFsz     = Math.round(S * 0.018);
+  const ftImgW    = 680;
+  const ftImgH    = Math.round(S * 0.032);
+
+  const ftImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
+    fontSize: ftFsz, color: 'rgba(255,255,255,0.65)',
+    width: ftImgW, height: ftImgH
+  });
+  if (ftImg) {
+    ctx.drawImage(ftImg, S/2 - ftImgW/2, ftCY - ftImgH * 0.8, ftImgW, ftImgH);
+  }
 
   if (logoImg) {
     ctx.save();
-    ctx.globalAlpha = 0.70;
-    ctx.drawImage(logoImg, W * 0.66, footerY - 14, 24, 24);
+    ctx.globalAlpha = 0.72;
+    ctx.drawImage(logoImg, S/2 + ftImgW/2 - ftLogoSz - 8, ftCY - ftLogoSz/2 - 1, ftLogoSz, ftLogoSz);
     ctx.restore();
-  }
-
-  const footerImg = await arabicTextToImage('عيد مبارك  ·  MLSA 2026  ·', {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.66)',
-    width: 430,
-    height: 30
-  });
-
-  if (footerImg) {
-    ctx.drawImage(footerImg, (W - 430) / 2 - 6, footerY - 18, 430, 30);
   }
 
   return canvas;
 }
+
 // ══════════════════════════════════════════════
 //  رسم General Card
 // ══════════════════════════════════════════════
 
 async function drawGeneralCard() {
-  const W = 900;
-  const H = 1200;
-
+  const W = 900, H = 1200;
   const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
-
+  canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
   const bgImg = await loadImage('image/eid.png');
-  if (bgImg) {
-    ctx.drawImage(bgImg, 0, 0, W, H);
-  } else {
+  if (bgImg) { ctx.drawImage(bgImg, 0, 0, W, H); }
+  else {
     const g = ctx.createLinearGradient(0, 0, W, H);
-    g.addColorStop(0, '#881c3c');
-    g.addColorStop(1, '#d24a73');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
+    g.addColorStop(0, '#881c3c'); g.addColorStop(1, '#d24a73');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
 
-  const ov = ctx.createLinearGradient(0, H * 0.5, 0, H);
+  const ov = ctx.createLinearGradient(0, H*0.5, 0, H);
   ov.addColorStop(0, 'rgba(0,0,0,0.05)');
   ov.addColorStop(1, 'rgba(0,0,0,0.55)');
-  ctx.fillStyle = ov;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = ov; ctx.fillRect(0, 0, W, H);
 
   const name = document.getElementById('outName2').textContent.trim();
-  const bW = Math.min(W * 0.82, 700);
-  const bH = 130;
-  const bX = (W - bW) / 2;
-  const bY = H * 0.72 - bH / 2;
+  const bW = Math.min(W*0.82, 700), bH = 130;
+  const bX = (W - bW) / 2, bY = H*0.72 - bH/2;
 
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.4)';
-  ctx.shadowBlur = 30;
-  ctx.shadowOffsetY = 10;
+  ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
-  roundRect(ctx, bX, bY, bW, bH, 40);
-  ctx.fill();
+  roundRect(ctx, bX, bY, bW, bH, 40); ctx.fill();
   ctx.restore();
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-  ctx.lineWidth = 2.5;
-  roundRect(ctx, bX, bY, bW, bH, 40);
-  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)'; ctx.lineWidth = 2.5;
+  roundRect(ctx, bX, bY, bW, bH, 40); ctx.stroke();
 
   const nameImg = await arabicTextToImage(name, {
-    fontSize: 54,
-    color: '#ffffff',
-    fontFamily: 'Cairo, Tajawal, sans-serif',
-    fontWeight: '900',
-    width: bW,
-    height: bH
+    fontSize: 54, color: '#ffffff',
+    fontFamily: 'Cairo, Tajawal, sans-serif', fontWeight: '900',
+    width: bW, height: bH
   });
-
-  if (nameImg) {
-    ctx.drawImage(nameImg, bX, bY, bW, bH);
-  }
+  if (nameImg) { ctx.drawImage(nameImg, bX, bY, bW, bH); }
 
   return canvas;
 }
 
 // ══════════════════════════════════════════════
-//  Preview on iPhone save manually
+//  عرض الصورة للحفظ (iOS)
 // ══════════════════════════════════════════════
 
 function showImagePreviewForSave(dataURL) {
@@ -730,61 +592,31 @@ function showImagePreviewForSave(dataURL) {
     overlay = document.createElement('div');
     overlay.id = 'savePreviewOverlay';
     overlay.style.cssText = `
-      position: fixed;
-      inset: 0;
-      background: rgba(3, 10, 25, 0.96);
-      z-index: 999999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      box-sizing: border-box;
-      gap: 16px;
+      position:fixed;inset:0;background:rgba(3,10,25,0.96);
+      z-index:999999;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:20px;box-sizing:border-box;gap:16px;
     `;
-
     overlay.innerHTML = `
-      <div style="
-        color: #fff;
-        text-align: center;
-        line-height: 1.9;
-        font-size: 15px;
-        max-width: 320px;
-      ">
+      <div style="color:#fff;text-align:center;line-height:1.9;font-size:15px;max-width:320px;">
         اضغطي مطولًا على الصورة ثم اختاري <b>حفظ الصورة</b>
       </div>
-
       <img id="savePreviewImage" alt="بطاقة المعايدة" style="
-        max-width: 92vw;
-        max-height: 68vh;
-        width: auto;
-        height: auto;
-        border-radius: 18px;
-        box-shadow: 0 12px 40px rgba(0,0,0,.35);
-        display: block;
-      ">
-
+        max-width:92vw;max-height:68vh;width:auto;height:auto;
+        border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:block;">
       <button id="closeSavePreviewBtn" style="
-        border: none;
-        border-radius: 14px;
-        padding: 12px 22px;
-        font-size: 15px;
-        font-weight: 700;
-        background: #FFB900;
-        color: #111;
-        cursor: pointer;
-      ">إغلاق</button>
+        border:none;border-radius:14px;padding:12px 22px;
+        font-size:15px;font-weight:700;background:#FFB900;color:#111;cursor:pointer;">
+        إغلاق
+      </button>
     `;
-
     document.body.appendChild(overlay);
-
     overlay.querySelector('#closeSavePreviewBtn').addEventListener('click', () => {
       overlay.style.display = 'none';
     });
   }
 
-  const img = overlay.querySelector('#savePreviewImage');
-  img.src = dataURL;
+  overlay.querySelector('#savePreviewImage').src = dataURL;
   overlay.style.display = 'flex';
 }
 
@@ -796,31 +628,30 @@ async function downloadCard() {
   const card = ['clubCard', 'genCard1']
     .map(id => document.getElementById(id))
     .find(el => el && !el.classList.contains('hidden'));
-
   if (!card) return;
 
   const btn = document.getElementById('dlBtn');
   btn.innerHTML = 'جاري التحميل...';
-  btn.disabled = true;
+  btn.disabled  = true;
 
   try {
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
-    }
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
     await wait(350);
 
-    let canvas;
     const isIOS = isIOSDevice();
+    let canvas;
 
     if (isIOS) {
+      // iOS: نرسم يدوياً (canvas API) لتفادي مشكلة tainted canvas
       canvas = card.id === 'clubCard'
         ? await drawClubCard()
         : await drawGeneralCard();
     } else {
+      // غير iOS: نحاول html2canvas أولاً (يطابق الموقع)، وإلا نرجع للرسم اليدوي
       try {
         canvas = await captureVisibleCardCanvas(card);
-      } catch (captureErr) {
-        console.warn('DOM capture failed, using fallback draw:', captureErr);
+      } catch (err) {
+        console.warn('html2canvas failed, using manual draw:', err);
         canvas = card.id === 'clubCard'
           ? await drawClubCard()
           : await drawGeneralCard();
@@ -843,14 +674,14 @@ async function downloadCard() {
     btn.innerHTML = '<span>✅</span> <span>تم!</span>';
     setTimeout(() => {
       btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-      btn.disabled = false;
+      btn.disabled  = false;
     }, 2200);
 
   } catch (err) {
     console.error(err);
     alert('حدث خطأ: ' + err.message);
     btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
-    btn.disabled = false;
+    btn.disabled  = false;
   }
 }
 
@@ -861,34 +692,14 @@ async function downloadCard() {
 function createFloatingShapes() {
   const container = document.getElementById('floatingShapes');
   if (!container) return;
-
-  const colors = ['#0078D4', '#50E6FF', '#FFB900', '#7FBA00'];
-  const shapes = ['◆', '✦', '●', '▪'];
-
+  const colors = ['#0078D4','#50E6FF','#FFB900','#7FBA00'];
+  const shapes = ['◆','✦','●','▪'];
   for (let i = 0; i < 18; i++) {
     const el = document.createElement('div');
     el.className = 'float-shape';
-
-    const size = Math.random() * 12 + 4;
-    const useEmoji = Math.random() > 0.5;
-
-    el.style.cssText = `
-      left:${Math.random() * 100}%;
-      bottom:-60px;
-      width:${size}px;
-      height:${size}px;
-      ${useEmoji
-        ? `color:${colors[Math.floor(Math.random() * colors.length)]};font-size:${size}px;`
-        : `background:${colors[Math.floor(Math.random() * colors.length)]};border-radius:${Math.random() > 0.5 ? '50%' : '3px'};transform:rotate(45deg);`
-      }
-      animation-duration:${Math.random() * 12 + 8}s;
-      animation-delay:${Math.random() * 12}s;
-    `;
-
-    if (useEmoji) {
-      el.textContent = shapes[Math.floor(Math.random() * shapes.length)];
-    }
-
+    const size = Math.random()*12+4, useEmoji = Math.random()>0.5;
+    el.style.cssText = `left:${Math.random()*100}%;bottom:-60px;width:${size}px;height:${size}px;${useEmoji?`color:${colors[Math.floor(Math.random()*colors.length)]};font-size:${size}px;`:`background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'3px'};transform:rotate(45deg);`}animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*12}s;`;
+    if (useEmoji) el.textContent = shapes[Math.floor(Math.random()*shapes.length)];
     container.appendChild(el);
   }
 }
@@ -896,81 +707,49 @@ function createFloatingShapes() {
 function initParticleCanvas() {
   const canvas = document.getElementById('particleCanvas');
   if (!canvas) return;
-
   const ctx = canvas.getContext('2d');
-  let W = window.innerWidth;
-  let H = window.innerHeight;
-
-  canvas.width = W;
-  canvas.height = H;
-
+  let W = window.innerWidth, H = window.innerHeight;
+  canvas.width = W; canvas.height = H;
   window.addEventListener('resize', () => {
-    W = window.innerWidth;
-    H = window.innerHeight;
-    canvas.width = W;
-    canvas.height = H;
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W; canvas.height = H;
   });
-
   const particles = [];
   for (let i = 0; i < 30; i++) {
     particles.push({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      r: Math.random() * 1.5 + 0.5,
-      speedX: (Math.random() - 0.5) * 0.3,
-      speedY: (Math.random() - 0.5) * 0.3,
-      alpha: Math.random() * 0.5 + 0.1,
-      color: Math.random() > 0.5 ? '#50E6FF' : '#FFB900'
+      x: Math.random()*W, y: Math.random()*H,
+      r: Math.random()*1.5+0.5,
+      speedX: (Math.random()-0.5)*0.3,
+      speedY: (Math.random()-0.5)*0.3,
+      alpha: Math.random()*0.5+0.1,
+      color: Math.random()>0.5?'#50E6FF':'#FFB900'
     });
   }
-
   function draw() {
     ctx.clearRect(0, 0, W, H);
-
     particles.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.globalAlpha = p.alpha;
-      ctx.fill();
-
-      p.x += p.speedX;
-      p.y += p.speedY;
-
-      if (p.x < 0 || p.x > W) p.speedX *= -1;
-      if (p.y < 0 || p.y > H) p.speedY *= -1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha; ctx.fill();
+      p.x += p.speedX; p.y += p.speedY;
+      if (p.x<0||p.x>W) p.speedX *= -1;
+      if (p.y<0||p.y>H) p.speedY *= -1;
     });
-
     requestAnimationFrame(draw);
   }
-
   draw();
 }
 
 document.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
-    if (!document.getElementById('step2A').classList.contains('hidden')) {
-      generateClub();
-    } else if (!document.getElementById('step2B').classList.contains('hidden')) {
-      generateGeneral();
-    }
+    if (!document.getElementById('step2A').classList.contains('hidden')) generateClub();
+    else if (!document.getElementById('step2B').classList.contains('hidden')) generateGeneral();
   }
 });
 
 const shakeStyle = document.createElement('style');
 shakeStyle.textContent = `
-  @keyframes shake{
-    0%,100%{transform:translateX(0)}
-    15%{transform:translateX(-8px)}
-    30%{transform:translateX(8px)}
-    45%{transform:translateX(-6px)}
-    60%{transform:translateX(6px)}
-    75%{transform:translateX(-3px)}
-    90%{transform:translateX(3px)}
-  }
-  .input-error{
-    animation:shake .35s ease both !important;
-  }
+  @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
+  .input-error{animation:shake .35s ease both !important;}
 `;
 document.head.appendChild(shakeStyle);
 
