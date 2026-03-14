@@ -8,6 +8,7 @@ function chooseMajor(n) {
   majorTemplate = n;
   document.getElementById('mainOpt1').classList.toggle('active', n === 1);
   document.getElementById('mainOpt2').classList.toggle('active', n === 2);
+
   setTimeout(() => {
     document.getElementById('step1').classList.add('hidden');
     if (n === 1) {
@@ -33,10 +34,12 @@ function goBackFromResult() {
   document.getElementById('step1').classList.remove('hidden');
   document.getElementById('mainOpt1').classList.remove('active');
   document.getElementById('mainOpt2').classList.remove('active');
+
   ['nameA', 'roleA', 'nameB'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+
   scrollToTop();
 }
 
@@ -47,27 +50,36 @@ function scrollToTop() {
 function requireName(inputId) {
   const el = document.getElementById(inputId);
   const val = el.value.trim();
+
   if (!val) {
     el.focus();
     el.style.borderColor = '#F25022';
     el.style.boxShadow = '0 0 0 3px rgba(242,80,34,.2)';
     el.classList.add('input-error');
+
     setTimeout(() => {
       el.style.borderColor = '';
       el.style.boxShadow = '';
       el.classList.remove('input-error');
     }, 1400);
+
     return null;
   }
+
   return val;
 }
 
-const STAR_POSITIONS = [[8, 12], [15, 55], [88, 10], [82, 60], [50, 6], [50, 94], [22, 30], [75, 30]];
+const STAR_POSITIONS = [
+  [8, 12], [15, 55], [88, 10], [82, 60],
+  [50, 6], [50, 94], [22, 30], [75, 30]
+];
 
 function buildClubStars() {
   const container = document.getElementById('clubStars');
   if (!container) return;
+
   container.innerHTML = '';
+
   STAR_POSITIONS.forEach(([x, y], i) => {
     const star = document.createElement('div');
     star.style.cssText = `
@@ -84,12 +96,18 @@ function buildClubStars() {
   });
 }
 
-const FESTIVE_POS = [[8, 10], [14, 16], [86, 10], [80, 18], [11, 82], [86, 76], [50, 8], [50, 92], [30, 25], [70, 75], [20, 60], [80, 40]];
+const FESTIVE_POS = [
+  [8, 10], [14, 16], [86, 10], [80, 18],
+  [11, 82], [86, 76], [50, 8], [50, 92],
+  [30, 25], [70, 75], [20, 60], [80, 40]
+];
 
 function buildFestiveDecor(containerId, colorA, colorB) {
   const c = document.getElementById(containerId);
   if (!c) return;
+
   c.innerHTML = '';
+
   FESTIVE_POS.forEach(([x, y], i) => {
     const el = document.createElement('div');
     el.className = 'c-confetti';
@@ -114,6 +132,7 @@ function generateClub() {
   if (!name) return;
 
   const role = document.getElementById('roleA').value.trim();
+
   document.getElementById('outName1').textContent = name;
 
   const roleEl = document.getElementById('outRole1');
@@ -134,8 +153,14 @@ function generateGeneral() {
 }
 
 function showResult(visibleId) {
-  ['step1', 'step2A', 'step2B'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  ['clubCard', 'genCard1'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['step1', 'step2A', 'step2B'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+
+  ['clubCard', 'genCard1'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+
   document.getElementById(visibleId).classList.remove('hidden');
 
   const section = document.getElementById('resultSection');
@@ -149,6 +174,20 @@ function showResult(visibleId) {
 // ══════════════════════════════════════════════
 //  helpers
 // ══════════════════════════════════════════════
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function isSafariBrowser() {
+  const ua = navigator.userAgent;
+  return /Safari/i.test(ua) && !/Chrome|CriOS|EdgiOS|FxiOS/i.test(ua);
+}
 
 function loadImage(src) {
   return new Promise(resolve => {
@@ -174,7 +213,16 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// رسم نص عربي عبر SVG foreignObject ← لا تغيّريه
+function escapeXML(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// رسم النص العربي بطريقة آمنة للآيفون
 function arabicTextToImage(text, opts = {}) {
   const fontSize = opts.fontSize || 48;
   const color = opts.color || '#ffffff';
@@ -182,22 +230,62 @@ function arabicTextToImage(text, opts = {}) {
   const fontWeight = opts.fontWeight || '700';
   const canvasW = opts.width || 900;
   const canvasH = opts.height || Math.ceil(fontSize * 1.8);
+  const safeText = escapeXML(text);
 
-  const html = `<div xmlns="http://www.w3.org/1999/xhtml"
-    style="width:${canvasW}px;height:${canvasH}px;
-           display:flex;align-items:center;justify-content:center;
-           direction:rtl;unicode-bidi:embed;
-           font-family:${fontFamily};font-size:${fontSize}px;
-           font-weight:${fontWeight};color:${color};
-           white-space:nowrap;overflow:visible;"
-  >${text}</div>`;
+  const useSafeSvgText = isIOSDevice() || isSafariBrowser();
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg"
-    width="${canvasW}" height="${canvasH}">
-    <foreignObject width="${canvasW}" height="${canvasH}">
-      ${html}
-    </foreignObject>
-  </svg>`;
+  let svg;
+
+  if (useSafeSvgText) {
+    svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}" viewBox="0 0 ${canvasW} ${canvasH}">
+        <style>
+          text {
+            font-family: ${fontFamily};
+            font-size: ${fontSize}px;
+            font-weight: ${fontWeight};
+            fill: ${color};
+          }
+        </style>
+        <text
+          x="50%"
+          y="50%"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          direction="rtl"
+          unicode-bidi="plaintext"
+        >${safeText}</text>
+      </svg>
+    `;
+  } else {
+    const html = `
+      <div xmlns="http://www.w3.org/1999/xhtml"
+        style="
+          width:${canvasW}px;
+          height:${canvasH}px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          direction:rtl;
+          unicode-bidi:embed;
+          font-family:${fontFamily};
+          font-size:${fontSize}px;
+          font-weight:${fontWeight};
+          color:${color};
+          white-space:nowrap;
+          overflow:visible;
+        "
+      >${safeText}</div>
+    `;
+
+    svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}">
+        <foreignObject width="${canvasW}" height="${canvasH}">
+          ${html}
+        </foreignObject>
+      </svg>
+    `;
+  }
 
   const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -217,7 +305,68 @@ function arabicTextToImage(text, opts = {}) {
 }
 
 // ══════════════════════════════════════════════
-//  Manual draw fallback (احتياطي فقط)
+//  html2canvas helper
+// ══════════════════════════════════════════════
+
+async function ensureHtml2Canvas() {
+  if (window.html2canvas) return window.html2canvas;
+
+  await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+
+  return window.html2canvas;
+}
+
+async function captureVisibleCardCanvas(cardEl) {
+  const html2canvas = await ensureHtml2Canvas();
+
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+
+  await wait(250);
+
+  const rect = cardEl.getBoundingClientRect();
+  const scale = Math.min(Math.max(window.devicePixelRatio || 2, 2), 3);
+
+  return await html2canvas(cardEl, {
+    backgroundColor: null,
+    useCORS: true,
+    allowTaint: false,
+    scale,
+    logging: false,
+    imageTimeout: 0,
+    removeContainer: true,
+    foreignObjectRendering: false,
+    width: Math.ceil(rect.width),
+    height: Math.ceil(rect.height),
+    windowWidth: document.documentElement.clientWidth,
+    windowHeight: document.documentElement.clientHeight,
+    scrollX: 0,
+    scrollY: 0,
+    onclone: (clonedDoc) => {
+      const clonedCard = clonedDoc.getElementById(cardEl.id);
+      if (!clonedCard) return;
+
+      clonedDoc.querySelectorAll('*').forEach(el => {
+        el.style.animationPlayState = 'paused';
+        el.style.caretColor = 'transparent';
+      });
+
+      clonedCard.style.transform = 'none';
+      clonedCard.style.filter = 'none';
+      clonedCard.style.margin = '0';
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  رسم Club Card
 // ══════════════════════════════════════════════
 
 async function drawClubCard() {
@@ -227,6 +376,7 @@ async function drawClubCard() {
   canvas.height = S;
   const ctx = canvas.getContext('2d');
 
+  // الخلفية
   const bg = ctx.createLinearGradient(0, 0, S * 0.6, S);
   bg.addColorStop(0, '#041530');
   bg.addColorStop(0.35, '#0a2568');
@@ -247,6 +397,7 @@ async function drawClubCard() {
   ctx.fillStyle = r2;
   ctx.fillRect(0, 0, S, S);
 
+  // شبكة
   ctx.strokeStyle = 'rgba(255,255,255,0.022)';
   ctx.lineWidth = 1;
   for (let x = 0; x < S; x += 48) {
@@ -262,15 +413,19 @@ async function drawClubCard() {
     ctx.stroke();
   }
 
-  [[0.08, 0.14], [0.88, 0.12], [0.15, 0.58], [0.82, 0.62], [0.50, 0.08],
-   [0.22, 0.32], [0.75, 0.32], [0.35, 0.78], [0.65, 0.22], [0.12, 0.48],
-   [0.90, 0.82], [0.50, 0.92]].forEach(([xr, yr]) => {
+  // نجوم
+  [
+    [0.08, 0.14], [0.88, 0.12], [0.15, 0.58], [0.82, 0.62], [0.50, 0.08],
+    [0.22, 0.32], [0.75, 0.32], [0.35, 0.78], [0.65, 0.22], [0.12, 0.48],
+    [0.90, 0.82], [0.50, 0.92]
+  ].forEach(([xr, yr]) => {
     ctx.fillStyle = `rgba(255,255,255,${(0.2 + Math.random() * 0.35).toFixed(2)})`;
     ctx.font = `${Math.round(Math.random() * 12 + 7)}px serif`;
     ctx.textAlign = 'center';
     ctx.fillText(Math.random() > 0.5 ? '✦' : '✧', xr * S, yr * S);
   });
 
+  // الهيدر
   const hdrH = S * 0.13;
   const hdrGrad = ctx.createLinearGradient(0, 0, 0, hdrH * 1.5);
   hdrGrad.addColorStop(0, 'rgba(0,8,30,0.92)');
@@ -298,6 +453,7 @@ async function drawClubCard() {
     ctx.restore();
   }
 
+  // English header
   const txtX = logoCX - 12;
   ctx.save();
   ctx.textAlign = 'right';
@@ -307,16 +463,19 @@ async function drawClubCard() {
   ctx.fillText('Microsoft LSAC Club', txtX, hdrH * 0.38);
   ctx.restore();
 
+  // Arabic header
   const arNameImg = await arabicTextToImage('نادي مايكروسوفت', {
     fontSize: Math.round(hdrH * 0.19),
     color: '#50E6FF',
     width: 500,
     height: Math.round(hdrH * 0.35)
   });
+
   if (arNameImg) {
     ctx.drawImage(arNameImg, txtX - 500, hdrH * 0.54, 500, Math.round(hdrH * 0.35));
   }
 
+  // happy eid image
   const eidTop = S * 0.13;
   const eidBot = S * 0.48;
   const eidImg = await loadImage('image/happyeid.png');
@@ -325,14 +484,18 @@ async function drawClubCard() {
     const maxW = S * 0.72;
     const maxH = eidBot - eidTop - 10;
     const natR = eidImg.width / eidImg.height;
+
     let dW = maxW;
     let dH = maxW / natR;
+
     if (dH > maxH) {
       dH = maxH;
       dW = maxH * natR;
     }
+
     const dX = (S - dW) / 2;
     const dY = eidTop + (maxH - dH) / 2 + 5;
+
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.28)';
     ctx.shadowBlur = 20;
@@ -340,6 +503,7 @@ async function drawClubCard() {
     ctx.restore();
   }
 
+  // كل عام وأنتم بخير
   const kolCY = S * 0.535;
   ctx.fillStyle = '#FFB900';
   ctx.font = '700 28px serif';
@@ -354,10 +518,18 @@ async function drawClubCard() {
     width: S * 0.70,
     height: Math.round(S * 0.072)
   });
+
   if (kolImg) {
-    ctx.drawImage(kolImg, S / 2 - (S * 0.70) / 2, kolCY - Math.round(S * 0.055), S * 0.70, Math.round(S * 0.072));
+    ctx.drawImage(
+      kolImg,
+      S / 2 - (S * 0.70) / 2,
+      kolCY - Math.round(S * 0.055),
+      S * 0.70,
+      Math.round(S * 0.072)
+    );
   }
 
+  // badge
   const name = document.getElementById('outName1').textContent.trim();
   const role = document.getElementById('outRole1').textContent.trim();
 
@@ -389,6 +561,7 @@ async function drawClubCard() {
     width: bdgW,
     height: Math.round(nameFontSize * 1.6)
   });
+
   if (nameImg) {
     const nameY = role ? bdgY + bdgH * 0.08 : bdgY + bdgH * 0.18;
     ctx.drawImage(nameImg, bdgX, nameY, bdgW, Math.round(nameFontSize * 1.6));
@@ -402,11 +575,13 @@ async function drawClubCard() {
       width: bdgW,
       height: Math.round(roleFontSize * 1.6)
     });
+
     if (roleImg) {
       ctx.drawImage(roleImg, bdgX, bdgY + bdgH * 0.52, bdgW, Math.round(roleFontSize * 1.6));
     }
   }
 
+  // footer
   const ftTop = S * 0.88;
   const ftGrad = ctx.createLinearGradient(0, ftTop, 0, S);
   ftGrad.addColorStop(0, 'rgba(0,0,0,0)');
@@ -415,6 +590,7 @@ async function drawClubCard() {
   ctx.fillRect(0, ftTop, S, S - ftTop);
 
   const ftCY = S * 0.944;
+
   if (logoImg) {
     ctx.save();
     ctx.globalAlpha = 0.72;
@@ -428,6 +604,7 @@ async function drawClubCard() {
     width: 700,
     height: Math.round(S * 0.032)
   });
+
   if (ftImg) {
     ctx.drawImage(ftImg, S / 2 - 350 + 14, ftCY - Math.round(S * 0.025), 700, Math.round(S * 0.032));
   }
@@ -435,11 +612,18 @@ async function drawClubCard() {
   return canvas;
 }
 
+// ══════════════════════════════════════════════
+//  رسم General Card
+// ══════════════════════════════════════════════
+
 async function drawGeneralCard() {
-  const W = 900, H = 1200;
+  const W = 900;
+  const H = 1200;
+
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
+
   const ctx = canvas.getContext('2d');
 
   const bgImg = await loadImage('image/eid.png');
@@ -487,6 +671,7 @@ async function drawGeneralCard() {
     width: bW,
     height: bH
   });
+
   if (nameImg) {
     ctx.drawImage(nameImg, bX, bY, bW, bH);
   }
@@ -495,121 +680,9 @@ async function drawGeneralCard() {
 }
 
 // ══════════════════════════════════════════════
-//  REAL CARD CAPTURE (الحل الأساسي)
+//  Preview on iPhone save manually
 // ══════════════════════════════════════════════
 
-function isIOSDevice() {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-}
-
-function isSafariBrowser() {
-  const ua = navigator.userAgent;
-  return /Safari/i.test(ua) && !/Chrome|CriOS|EdgiOS|FxiOS/i.test(ua);
-}
-
-function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function ensureHtml2Canvas() {
-  if (window.html2canvas) return window.html2canvas;
-
-  await new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-
-  return window.html2canvas;
-}
-
-async function captureVisibleCardCanvas(cardEl) {
-  const html2canvas = await ensureHtml2Canvas();
-
-  const oldScrollX = window.scrollX;
-  const oldScrollY = window.scrollY;
-
-  cardEl.scrollIntoView({ behavior: 'instant', block: 'center', inline: 'center' });
-  await wait(250);
-  if (document.fonts && document.fonts.ready) {
-    await document.fonts.ready;
-  }
-  await wait(250);
-
-  const rect = cardEl.getBoundingClientRect();
-  const scale = Math.min(Math.max(window.devicePixelRatio || 2, 2), 3);
-
-  const canvas = await html2canvas(cardEl, {
-    backgroundColor: null,
-    useCORS: true,
-    allowTaint: false,
-    scale,
-    logging: false,
-    imageTimeout: 0,
-    removeContainer: true,
-    foreignObjectRendering: false,
-    width: Math.ceil(rect.width),
-    height: Math.ceil(rect.height),
-    windowWidth: document.documentElement.clientWidth,
-    windowHeight: document.documentElement.clientHeight,
-    scrollX: 0,
-    scrollY: 0,
-    onclone: (clonedDoc) => {
-      const clonedCard = clonedDoc.getElementById(cardEl.id);
-      if (!clonedCard) return;
-
-      clonedDoc.querySelectorAll('*').forEach(el => {
-        el.style.animationPlayState = 'paused';
-        el.style.caretColor = 'transparent';
-      });
-
-      clonedCard.style.transform = 'none';
-      clonedCard.style.filter = 'none';
-      clonedCard.style.margin = '0';
-    }
-  });
-
-  window.scrollTo(oldScrollX, oldScrollY);
-  return canvas;
-}
-
-function dataURLToBlob(dataURL) {
-  const arr = dataURL.split(',');
-  const mime = arr[0].match(/:(.*?);/)[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new Blob([u8arr], { type: mime });
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-}
-
-function openBlobInNewTab(blob) {
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
-}
-
-// ══════════════════════════════════════════════
-//  Download
-// ══════════════════════════════════════════════
 function showImagePreviewForSave(dataURL) {
   let overlay = document.getElementById('savePreviewOverlay');
 
@@ -673,6 +746,72 @@ function showImagePreviewForSave(dataURL) {
   const img = overlay.querySelector('#savePreviewImage');
   img.src = dataURL;
   overlay.style.display = 'flex';
+}
+
+// ══════════════════════════════════════════════
+//  Download
+// ══════════════════════════════════════════════
+
+async function downloadCard() {
+  const card = ['clubCard', 'genCard1']
+    .map(id => document.getElementById(id))
+    .find(el => el && !el.classList.contains('hidden'));
+
+  if (!card) return;
+
+  const btn = document.getElementById('dlBtn');
+  btn.innerHTML = 'جاري التحميل...';
+  btn.disabled = true;
+
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+    await wait(350);
+
+    let canvas;
+    const isIOS = isIOSDevice();
+
+    if (isIOS) {
+      canvas = card.id === 'clubCard'
+        ? await drawClubCard()
+        : await drawGeneralCard();
+    } else {
+      try {
+        canvas = await captureVisibleCardCanvas(card);
+      } catch (captureErr) {
+        console.warn('DOM capture failed, using fallback draw:', captureErr);
+        canvas = card.id === 'clubCard'
+          ? await drawClubCard()
+          : await drawGeneralCard();
+      }
+    }
+
+    const dataURL = canvas.toDataURL('image/png');
+
+    if (isIOS) {
+      showImagePreviewForSave(dataURL);
+    } else {
+      const link = document.createElement('a');
+      link.download = 'mlsac-eid-1447.png';
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    btn.innerHTML = '<span>✅</span> <span>تم!</span>';
+    setTimeout(() => {
+      btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
+      btn.disabled = false;
+    }, 2200);
+
+  } catch (err) {
+    console.error(err);
+    alert('حدث خطأ: ' + err.message);
+    btn.innerHTML = '<span class="dl-icon">⬇</span> <span>تحميل البطاقة</span>';
+    btn.disabled = false;
+  }
 }
 
 // ══════════════════════════════════════════════
