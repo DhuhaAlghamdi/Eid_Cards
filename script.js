@@ -317,7 +317,7 @@ async function drawClubCard() {
 
   // البوكس في الصورة: عرضه ~52% من S، مركزه عند 81.5%
   const bdgW = S * 0.52;
-  const bdgCenterY = S * 0.815;
+  const bdgCenterY = S * 1.15;
   const bdgX = (S - bdgW) / 2;
 
   // الاسم
@@ -339,7 +339,7 @@ async function drawClubCard() {
   // المنصب
   if (role) {
     const roleImg = await arabicTextToImage(role, {
-      fontSize: 34,
+      fontSize: 46,
       color: '#50E6FF',
       fontFamily: 'Cairo, Tajawal, sans-serif',
       fontWeight: '700',
@@ -407,7 +407,7 @@ async function drawGeneralCard() {
   const bdgX = (W - bdgW) / 2;
 
   const nameImg = await arabicTextToImage(name, {
-    fontSize: 58,
+    fontSize: 70,
     color: '#ffffff',
     fontFamily: 'Cairo, Tajawal, sans-serif',
     fontWeight: '900',
